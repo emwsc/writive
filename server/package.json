@@ -1,0 +1,9 @@
+{
+    "name": "writive-server",
+    "version": "2019.04.19.01",
+    "description": "writive server",
+    "dependencies": {
+        "express": "^4.16.4",
+        "socket.io": "^2.2.0"
+    }
+}
