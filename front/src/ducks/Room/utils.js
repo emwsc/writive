@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import socketIOClient from "socket.io-client";
+import { getConnectionUrl } from "../../common/utils";
 
 /**
  * Hook on room load
@@ -8,13 +9,10 @@ import socketIOClient from "socket.io-client";
  */
 export function useOnRoomLoad(roomhash, setSocket, events) {
   useEffect(() => {
-    const url =
-      window.location.hostname === "localhost"
-        ? "http://localhost"
-        : "http://192.168.31.144";
-    const socket = socketIOClient(url + ":3456");
-    socket.emit("join", roomhash);
+    const url = getConnectionUrl();
+    const socket = socketIOClient(url);
     setSocket(socket);
+    socket.emit("join", roomhash);
     connectEventHandlers(socket, events);
   }, [roomhash]);
 }
@@ -32,5 +30,19 @@ function connectEventHandlers(socket, events) {
     console.log("disconnect");
   });
   if (!events) return;
-  for (const event of events) socket.on(event.eventName, event.handler);
+  for (const event of events)
+    socket.on(event.eventName, function() {
+      event.handler(...arguments, socket);
+    });
+}
+
+/**
+ * Get count of connected users
+ * @param {string} roomhash
+ */
+export function getConnectionCount(roomhash) {
+  const url = getConnectionUrl();
+  return fetch(url + "/api/v1/getConnectionCount?room=" + roomhash).then(
+    result => result.text()
+  );
 }

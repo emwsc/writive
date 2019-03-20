@@ -15,6 +15,7 @@ export const StyledTop = styled.div`
 export const StyledRoomTitle = styled.div`
   font-size: 12px;
   font-weight: bold;
+  color: dimgray;
 `;
 
 export const StyledEditorContainer = styled.div`

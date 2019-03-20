@@ -1,48 +1,88 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyledRoom,
   StyledEditorContainer,
   StyledTop,
   StyledRoomTitle
 } from "./styled";
-import { useOnRoomLoad } from "./utils";
+import { useOnRoomLoad, getConnectionCount } from "./utils";
 import TextEditor from "../Editor";
+import ConnectedUsers from "./ConnectedUsers";
 
 const Room = props => {
   const { match } = props;
+  const editorRef = useRef(null);
   const [socket, setSocket] = useState();
+  const [initialRawContent, setInitialRawContent] = useState(null);
   const [latestTextEditorChanges, setTextEditorChanges] = useState();
+  const [connectionCount, setCount] = useState(0);
+
+  useEffect(() => {
+    getConnectionCount(match.params.roomhash).then(currentCount => {
+      setCount(parseInt(currentCount) + 1);
+    });
+  }, []);
 
   const emitTextEditorChanges = textEditorChanges => {
     if (!socket) return;
     socket.emit("emitTextEditorChanges", textEditorChanges);
   };
 
-  const recieveTextEditorChanges = textEditorChanges => {
-    setTextEditorChanges(textEditorChanges);
-  };
+  function emitCurrentEditorState(socketId, socket) {
+    if (!socket) return;
+    socket.emit("sendCurrentEditorState", {
+      to: socketId,
+      editorJson: JSON.stringify(editorRef.current.rawContent)
+    });
+  }
 
   const textEditorProps = {
     emitTextEditorChanges,
-    latestTextEditorChanges
+    latestTextEditorChanges,
+    initialRawContent
   };
 
-  useOnRoomLoad(match.params.roomhash, setSocket, [
+  const events = [
     {
       eventName: "recieveTextEditorChanges",
-      handler: recieveTextEditorChanges
+      handler: textEditorChanges => {
+        setTextEditorChanges(textEditorChanges);
+      }
+    },
+    {
+      eventName: "connectionsCountChanges",
+      handler: () => {
+        getConnectionCount(match.params.roomhash).then(currentCount => {
+          setCount(parseInt(currentCount));
+        });
+      }
+    },
+    {
+      eventName: "getCurrentEditorState",
+      handler: emitCurrentEditorState
+    },
+    {
+      eventName: "setCurrentEditorState",
+      handler: data => {
+        if (data) setInitialRawContent(JSON.parse(data));
+      }
     }
-  ]);
+  ];
+
+  useOnRoomLoad(match.params.roomhash, setSocket, events);
 
   return (
     <StyledRoom>
       <StyledTop>
-        <StyledRoomTitle>
-          You are now in room "{match.params.roomhash}"
-        </StyledRoomTitle>
+        <div>
+          <StyledRoomTitle>
+            You are now in story "{match.params.roomhash}"
+          </StyledRoomTitle>
+          <ConnectedUsers connectionCount={connectionCount} />
+        </div>
       </StyledTop>
       <StyledEditorContainer>
-        <TextEditor {...textEditorProps} />
+        <TextEditor ref={editorRef} {...textEditorProps} />
       </StyledEditorContainer>
     </StyledRoom>
   );

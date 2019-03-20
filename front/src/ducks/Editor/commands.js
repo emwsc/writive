@@ -1,4 +1,4 @@
 export default {
-  INSER_TEXT: "INSER_TEXT",
-  REMOVE_TEXT: "REMOVE_TEXT"
+  INSERT_TEXT: "insert-characters",
+  REMOVE_TEXT: "backspace-character"
 };
