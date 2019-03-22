@@ -43,8 +43,8 @@ export function useOnTextEditorRemoteChanges(
     const noChanges =
       !editorState ||
       !textEditorChanges.anchorKey ||
-      !textEditorChanges.char ||
-      textEditorChanges.char === "";
+      (textEditorChanges.command === COMMANDS.INSERT_TEXT &&
+        (!textEditorChanges.char || textEditorChanges.char === ""));
     if (noChanges) return;
     const contentState = editorState.getCurrentContent();
     const blockMap = contentState.getBlockMap();
@@ -99,8 +99,8 @@ function onExistingBlock(textEditorChanges, editorState, dispatch) {
         .getSelection()
         .set("anchorKey", textEditorChanges.anchorKey)
         .set("focusKey", textEditorChanges.focusKey)
-        .set("focusOffset", textEditorChanges.focusOffset)
-        .set("anchorOffset", textEditorChanges.anchorOffset);
+        .set("focusOffset", textEditorChanges.focusOffset - 1)
+        .set("anchorOffset", textEditorChanges.anchorOffset - 1);
       const contentState = editorState.getCurrentContent();
       const ncs = Modifier.insertText(
         contentState,
@@ -111,16 +111,22 @@ function onExistingBlock(textEditorChanges, editorState, dispatch) {
       dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
       return;
     }
+    case COMMANDS.REMOVE_RANGE:
     case COMMANDS.REMOVE_TEXT: {
-      const selection = editorState
+      const selectionState = editorState
         .getSelection()
         .set("anchorKey", textEditorChanges.anchorKey)
         .set("focusKey", textEditorChanges.focusKey)
-        .set("focusOffset", textEditorChanges.focusOffset + 1)
+        .set("focusOffset", textEditorChanges.focusOffset)
         .set("anchorOffset", textEditorChanges.anchorOffset);
       const contentState = editorState.getCurrentContent();
-      const ncs = Modifier.removeRange(contentState, selection, "backward");
+      const ncs = Modifier.removeRange(
+        contentState,
+        selectionState,
+        "backward"
+      );
       const es = EditorState.push(editorState, ncs, "remove-range");
+
       dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
       return;
     }
@@ -137,16 +143,44 @@ export function gatherEditorChanges(editorState) {
   const { anchorKey, anchorOffset, focusOffset, focusKey } = selection;
   const { blockMap } = currentContent;
   const char = blockMap[anchorKey].text[anchorOffset - 1];
-  return {
-    char,
-    command: rawState.lastChangeType,
-    focusOffset,
-    anchorKey,
-    focusKey,
-    anchorOffset
-  };
+  const command = rawState.lastChangeType;
+  switch (command) {
+    case COMMANDS.REMOVE_TEXT:
+    case COMMANDS.REMOVE_RANGE: {
+      debugger;
+      const removeFocusOffset =
+        rawState.currentContent.selectionBefore.focusOffset >
+        rawState.currentContent.selectionBefore.anchorOffset
+          ? rawState.currentContent.selectionBefore.focusOffset
+          : rawState.currentContent.selectionBefore.anchorOffset;
+
+      return {
+        char,
+        command,
+        focusOffset: removeFocusOffset,
+        anchorKey,
+        focusKey,
+        anchorOffset: rawState.currentContent.selectionAfter.anchorOffset
+      };
+    }
+    default: {
+      return {
+        char,
+        command,
+        focusOffset,
+        anchorKey,
+        focusKey,
+        anchorOffset
+      };
+    }
+  }
 }
 
+/**
+ * Check changes
+ * @param {object} prev
+ * @param {next} next
+ */
 export function hasTextEditorChanges(prev, next) {
   if (!prev || !next) return false;
   const rawPrevState = prev.toJS();
@@ -161,6 +195,17 @@ export function hasTextEditorChanges(prev, next) {
   const nextSelection = rawNextState.selection;
   const nextAnchorKey = nextSelection.anchorKey;
   const nextBlockMap = nextContent.blockMap;
-
-  return prevBlockMap[prevAnchorKey].text !== nextBlockMap[nextAnchorKey].text;
+  /**
+   * We are on same block of text
+   */
+  if (prevAnchorKey === nextAnchorKey)
+    return (
+      prevBlockMap[prevAnchorKey].text !== nextBlockMap[nextAnchorKey].text
+    );
+  else {
+    return (
+      !prevBlockMap[nextAnchorKey] ||
+      prevBlockMap[nextAnchorKey].text !== nextBlockMap[nextAnchorKey].text
+    );
+  }
 }

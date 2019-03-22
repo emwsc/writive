@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   StyledRoom,
   StyledEditorContainer,
@@ -21,7 +21,6 @@ const Room = props => {
 
   function checkConnections() {
     getConnections(match.params.roomhash).then(connectionsJson => {
-      debugger;
       if (connectionsJson) setConnections(JSON.parse(connectionsJson));
     });
   }
@@ -48,9 +47,7 @@ const Room = props => {
   const events = [
     {
       eventName: "recieveTextEditorChanges",
-      handler: textEditorChanges => {
-        setTextEditorChanges(textEditorChanges);
-      }
+      handler: setTextEditorChanges
     },
     {
       eventName: "connectionsCountChanges",
@@ -69,12 +66,13 @@ const Room = props => {
   ];
 
   useOnRoomLoad(match.params.roomhash, setSocket, events, checkConnections);
+
   return (
     <StyledRoom>
       <StyledTop>
         <div>
           <StyledRoomTitle>
-            You are now in story "{match.params.roomhash}"
+            {match.params.roomhash.split("-").join(" ")}
           </StyledRoomTitle>
           <ConnectedUsers connections={connections} />
         </div>
