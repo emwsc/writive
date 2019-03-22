@@ -6,7 +6,7 @@ import {
   ContentBlock,
   CharacterMetadata
 } from "draft-js";
-import { List, Repeat } from "immutable";
+import { List, Repeat, OrderedMap } from "immutable";
 import TYPES from "./types";
 
 /**
@@ -51,7 +51,9 @@ export function useOnTextEditorRemoteChanges(
     const block = blockMap.get(textEditorChanges.anchorKey);
     if (!block && textEditorChanges.command === COMMANDS.INSERT_TEXT)
       onNewBlock(textEditorChanges, blockMap, editorState, dispatch);
-    else if (block) onExistingBlock(textEditorChanges, editorState, dispatch);
+    else if (textEditorChanges.command === COMMANDS.NEWLINE) {
+      onNewBlock(textEditorChanges, blockMap, editorState, dispatch);
+    } else if (block) onExistingBlock(textEditorChanges, editorState, dispatch);
   }, getEffectKeys(textEditorChanges));
 }
 
@@ -65,25 +67,79 @@ export function useOnTextEditorRemoteChanges(
 function onNewBlock(textEditorChanges, blockMap, editorState, dispatch) {
   const newBlock = new ContentBlock({
     key: textEditorChanges.anchorKey,
-    text: textEditorChanges.char,
+    text: textEditorChanges.char ? textEditorChanges.char : "",
     characterList: new List(
-      Repeat(CharacterMetadata.create(), textEditorChanges.char.length)
+      Repeat(
+        CharacterMetadata.create(),
+        textEditorChanges.char ? textEditorChanges.char.length : 0
+      )
     ),
     type: "unstyled"
   });
-  const newBlockMap = blockMap
-    .toSeq()
-    .concat([[newBlock.getKey(), newBlock]])
-    .toOrderedMap();
+  let newBlockMap = null;
+  switch (textEditorChanges.command) {
+    case COMMANDS.NEWLINE: {
+      // const seq = blockMap.toSeq();
+      // debugger;
+      // let map = OrderedMap();
+      // const iter = seq.entries();
+      // while (true) {
+      //   const item = iter.next();
+      //   if (item.done) break;
+      //   const [key, block] = item.value;
+      //   if (key !== textEditorChanges.focusKey) {
+      //     map = map.set(key, block);
+      //   }
+      //   //newSeq = newSeq.concat([key, block]);
+      //   else {
+      //     // newSeq = newSeq.concat([key, block]);
+      //     debugger;
+      //     map = map.set(key, block);
+      //     map = map.set(newBlock.getKey(), newBlock);
+      //     // newSeq = newSeq.concat([[newBlock.getKey(), newBlock]]);
+      //   }
+      // }
+      // newBlockMap = map;
+      // break;
+      debugger;
+      const currentBlock = editorState
+        .getCurrentContent()
+        .getBlockForKey(textEditorChanges.focusKey);
+
+      const blocksBefore = blockMap.toSeq().takeUntil(function(v) {
+        return v === currentBlock;
+      });
+      const blocksAfter = blockMap
+        .toSeq()
+        .skipUntil(function(v) {
+          return v === currentBlock;
+        })
+        .rest();
+      let newBlocks = [
+        [currentBlock.getKey(), currentBlock],
+        [newBlock.getKey(), newBlock]
+      ];
+      newBlockMap = blocksBefore.concat(newBlocks, blocksAfter).toOrderedMap();
+      break;
+    }
+    case COMMANDS.INSERT_TEXT:
+      newBlockMap = blockMap
+        .toSeq()
+        .concat([[newBlock.getKey(), newBlock]])
+        .toOrderedMap();
+      break;
+  }
   const mergedContentState = editorState.getCurrentContent().merge({
     blockMap: newBlockMap
   });
-  const es = EditorState.push(
-    editorState,
-    mergedContentState,
-    "insert-fragment"
-  );
-  dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
+  if (newBlockMap) {
+    const es = EditorState.push(
+      editorState,
+      mergedContentState,
+      "insert-fragment"
+    );
+    dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
+  }
 }
 
 /**
@@ -94,6 +150,20 @@ function onNewBlock(textEditorChanges, blockMap, editorState, dispatch) {
  */
 function onExistingBlock(textEditorChanges, editorState, dispatch) {
   switch (textEditorChanges.command) {
+    // case COMMANDS.NEWLINE: {
+    //   debugger;
+    //   const selection = editorState
+    //     .getSelection()
+    //     .set("anchorKey", textEditorChanges.anchorKey)
+    //     .set("focusKey", textEditorChanges.focusKey)
+    //     .set("focusOffset", textEditorChanges.focusOffset + 1)
+    //     .set("anchorOffset", textEditorChanges.anchorOffset + 1);
+    //   const contentState = editorState.getCurrentContent();
+    //   const ncs = Modifier.splitBlock(contentState, selection);
+    //   const es = EditorState.push(editorState, ncs, textEditorChanges.command);
+    //   dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
+    //   return;
+    // }
     case COMMANDS.INSERT_TEXT: {
       const selection = editorState
         .getSelection()
@@ -107,7 +177,7 @@ function onExistingBlock(textEditorChanges, editorState, dispatch) {
         selection,
         textEditorChanges.char
       );
-      const es = EditorState.push(editorState, ncs, "insert-fragment");
+      const es = EditorState.push(editorState, ncs, textEditorChanges.command);
       dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
       return;
     }
@@ -125,7 +195,7 @@ function onExistingBlock(textEditorChanges, editorState, dispatch) {
         selectionState,
         "backward"
       );
-      const es = EditorState.push(editorState, ncs, "remove-range");
+      const es = EditorState.push(editorState, ncs, textEditorChanges.command);
 
       dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
       return;
@@ -147,7 +217,6 @@ export function gatherEditorChanges(editorState) {
   switch (command) {
     case COMMANDS.REMOVE_TEXT:
     case COMMANDS.REMOVE_RANGE: {
-      debugger;
       const removeFocusOffset =
         rawState.currentContent.selectionBefore.focusOffset >
         rawState.currentContent.selectionBefore.anchorOffset
@@ -158,9 +227,19 @@ export function gatherEditorChanges(editorState) {
         char,
         command,
         focusOffset: removeFocusOffset,
-        anchorKey,
-        focusKey,
+        anchorKey: rawState.currentContent.selectionAfter.anchorKey,
+        focusKey: rawState.currentContent.selectionBefore.focusKey,
         anchorOffset: rawState.currentContent.selectionAfter.anchorOffset
+      };
+    }
+    case COMMANDS.NEWLINE: {
+      return {
+        char,
+        command,
+        focusOffset,
+        anchorKey: rawState.currentContent.selectionAfter.anchorKey,
+        focusKey: rawState.currentContent.selectionBefore.focusKey,
+        anchorOffset
       };
     }
     default: {
