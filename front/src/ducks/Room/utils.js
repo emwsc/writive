@@ -6,6 +6,7 @@ import { getConnectionUrl } from "../../common/utils";
  * Hook on room load
  * @param {string} roomhash
  * @param {function} setSocket
+ * @param {[]} events Array of event handlers for socket
  */
 export function useOnRoomLoad(roomhash, setSocket, events) {
   useEffect(() => {
@@ -44,5 +45,16 @@ export function getConnectionCount(roomhash) {
   const url = getConnectionUrl();
   return fetch(url + "/api/v1/getConnectionCount?room=" + roomhash).then(
     result => result.text()
+  );
+}
+
+/**
+ * Get info about connection to room users
+ * @param {string} roomhash
+ */
+export function getConnections(roomhash) {
+  const url = getConnectionUrl();
+  return fetch(url + "/api/v1/getConnections?room=" + roomhash).then(result =>
+    result.text()
   );
 }

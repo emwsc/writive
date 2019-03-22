@@ -5,7 +5,7 @@ import {
   StyledTop,
   StyledRoomTitle
 } from "./styled";
-import { useOnRoomLoad, getConnectionCount } from "./utils";
+import { useOnRoomLoad, getConnections } from "./utils";
 import TextEditor from "../Editor";
 import ConnectedUsers from "./ConnectedUsers";
 
@@ -15,13 +15,16 @@ const Room = props => {
   const [socket, setSocket] = useState();
   const [initialRawContent, setInitialRawContent] = useState(null);
   const [latestTextEditorChanges, setTextEditorChanges] = useState();
-  const [connectionCount, setCount] = useState(0);
+  const [connections, setConnections] = useState({
+    count: 0
+  });
 
-  useEffect(() => {
-    getConnectionCount(match.params.roomhash).then(currentCount => {
-      setCount(parseInt(currentCount) + 1);
+  function checkConnections() {
+    getConnections(match.params.roomhash).then(connectionsJson => {
+      debugger;
+      if (connectionsJson) setConnections(JSON.parse(connectionsJson));
     });
-  }, []);
+  }
 
   const emitTextEditorChanges = textEditorChanges => {
     if (!socket) return;
@@ -51,11 +54,7 @@ const Room = props => {
     },
     {
       eventName: "connectionsCountChanges",
-      handler: () => {
-        getConnectionCount(match.params.roomhash).then(currentCount => {
-          setCount(parseInt(currentCount));
-        });
-      }
+      handler: checkConnections
     },
     {
       eventName: "getCurrentEditorState",
@@ -69,8 +68,7 @@ const Room = props => {
     }
   ];
 
-  useOnRoomLoad(match.params.roomhash, setSocket, events);
-
+  useOnRoomLoad(match.params.roomhash, setSocket, events, checkConnections);
   return (
     <StyledRoom>
       <StyledTop>
@@ -78,7 +76,7 @@ const Room = props => {
           <StyledRoomTitle>
             You are now in story "{match.params.roomhash}"
           </StyledRoomTitle>
-          <ConnectedUsers connectionCount={connectionCount} />
+          <ConnectedUsers connections={connections} />
         </div>
       </StyledTop>
       <StyledEditorContainer>
