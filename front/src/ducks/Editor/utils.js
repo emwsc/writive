@@ -14,29 +14,24 @@ import TYPES from "./types";
  * @param {object} textEditorChanges
  */
 function getEffectKeys(textEditorChanges) {
-  const effectKeys = {
-    char: textEditorChanges.char ? textEditorChanges.char : "",
-    focusOffset: textEditorChanges.focusOffset
-      ? textEditorChanges.focusOffset
-      : -1,
-    anchorKey: textEditorChanges.anchorKey ? textEditorChanges.anchorKey : "",
-    anchorOffset: textEditorChanges.anchorOffset
-      ? textEditorChanges.anchorOffset
-      : -1
-  };
-  return Object.values(effectKeys);
+  return [
+    textEditorChanges.char ? textEditorChanges.char : "",
+    textEditorChanges.focusOffset ? textEditorChanges.focusOffset : -1,
+    textEditorChanges.anchorKey ? textEditorChanges.anchorKey : "",
+    textEditorChanges.anchorOffset ? textEditorChanges.anchorOffset : -1
+  ];
 }
 
 /**
  * Act on recieving changes from remove user
  * @param {object} textEditorChanges
  * @param {object} editorState
- * @param {function} dispatch
+ * @param {function} onEditorChange
  */
 export function useOnTextEditorRemoteChanges(
   textEditorChanges,
   editorState,
-  dispatch
+  onEditorChange
 ) {
   useEffect(() => {
     console.log(textEditorChanges);
@@ -46,16 +41,19 @@ export function useOnTextEditorRemoteChanges(
       (textEditorChanges.command === COMMANDS.INSERT_TEXT &&
         (!textEditorChanges.char || textEditorChanges.char === ""));
     if (noChanges) return;
-
+    debugger;
     const contentState = editorState.getCurrentContent();
     const blockMap = contentState.getBlockMap();
-    const block = blockMap.get(textEditorChanges.anchorKey);
+    // const block = blockMap.get(textEditorChanges.anchorKey);
 
-    if (!block && textEditorChanges.command === COMMANDS.INSERT_TEXT)
-      onNewBlock(textEditorChanges, blockMap, editorState, dispatch);
-    else if (textEditorChanges.command === COMMANDS.NEWLINE) {
-      onNewBlock(textEditorChanges, blockMap, editorState, dispatch);
-    } else if (block) onExistingBlock(textEditorChanges, editorState, dispatch);
+    // if (!block && textEditorChanges.command === COMMANDS.INSERT_TEXT)
+    //   onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange);
+    // else if (textEditorChanges.command === COMMANDS.NEWLINE) {
+    //   onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange);
+    // } else if (block)
+    if (textEditorChanges.command === COMMANDS.NEWLINE)
+      onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange);
+    else onExistingBlock(textEditorChanges, editorState, onEditorChange);
   }, getEffectKeys(textEditorChanges));
 }
 
@@ -64,20 +62,9 @@ export function useOnTextEditorRemoteChanges(
  * @param {object} textEditorChanges
  * @param {Map} blockMap
  * @param {object} editorState
- * @param {function} dispatch
+ * @param {function} onEditorChange
  */
-function onNewBlock(textEditorChanges, blockMap, editorState, dispatch) {
-  const newBlock = new ContentBlock({
-    key: textEditorChanges.anchorKey,
-    text: textEditorChanges.char ? textEditorChanges.char : "",
-    characterList: new List(
-      Repeat(
-        CharacterMetadata.create(),
-        textEditorChanges.char ? textEditorChanges.char.length : 0
-      )
-    ),
-    type: "unstyled"
-  });
+function onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange) {
   let newBlockMap = null;
   switch (textEditorChanges.command) {
     case COMMANDS.NEWLINE: {
@@ -85,6 +72,32 @@ function onNewBlock(textEditorChanges, blockMap, editorState, dispatch) {
       const currentBlock = editorState
         .getCurrentContent()
         .getBlockForKey(textEditorChanges.focusKey);
+      const currentBlockObj = currentBlock.toObject();
+      const currentText = currentBlockObj.text;
+      let newBlockText = "";
+      if (textEditorChanges.focusOffset < currentText.length) {
+        newBlockText = currentText.substr(textEditorChanges.focusOffset);
+        onExistingBlock(
+          {
+            command: COMMANDS.REMOVE_RANGE,
+            focusOffset: currentText.length,
+            anchorKey: textEditorChanges.focusKey,
+            focusKey: textEditorChanges.focusKey,
+            anchorOffset: textEditorChanges.focusOffset
+          },
+          editorState,
+          onEditorChange
+        );
+      }
+
+      const newBlock = new ContentBlock({
+        key: textEditorChanges.anchorKey,
+        text: newBlockText,
+        characterList: new List(
+          Repeat(CharacterMetadata.create(), newBlockText.length)
+        ),
+        type: "unstyled"
+      });
 
       const blocksBefore = blockMap.toSeq().takeUntil(function(v) {
         return v === currentBlock;
@@ -102,13 +115,26 @@ function onNewBlock(textEditorChanges, blockMap, editorState, dispatch) {
       newBlockMap = blocksBefore.concat(newBlocks, blocksAfter).toOrderedMap();
       break;
     }
-    case COMMANDS.INSERT_TEXT:
+    case COMMANDS.INSERT_TEXT: {
+      const newBlock = new ContentBlock({
+        key: textEditorChanges.anchorKey,
+        text: textEditorChanges.char ? textEditorChanges.char : "",
+        characterList: new List(
+          Repeat(
+            CharacterMetadata.create(),
+            textEditorChanges.char ? textEditorChanges.char.length : 0
+          )
+        ),
+        type: "unstyled"
+      });
       newBlockMap = blockMap
         .toSeq()
         .concat([[newBlock.getKey(), newBlock]])
         .toOrderedMap();
       break;
+    }
   }
+
   const mergedContentState = editorState.getCurrentContent().merge({
     blockMap: newBlockMap
   });
@@ -118,7 +144,7 @@ function onNewBlock(textEditorChanges, blockMap, editorState, dispatch) {
       mergedContentState,
       "insert-fragment"
     );
-    dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
+    onEditorChange(es, false);
   }
 }
 
@@ -126,25 +152,33 @@ function onNewBlock(textEditorChanges, blockMap, editorState, dispatch) {
  * Insert text into existing block in text editor
  * @param {object} textEditorChanges
  * @param {object} editorState
- * @param {function} dispatch
+ * @param {function} onEditorChange
  */
-function onExistingBlock(textEditorChanges, editorState, dispatch) {
+function onExistingBlock(textEditorChanges, editorState, onEditorChange) {
   switch (textEditorChanges.command) {
     case COMMANDS.INSERT_TEXT: {
+      const contentState = editorState.getCurrentContent();
+      const savedSelection = editorState.getSelection();
       const selection = editorState
         .getSelection()
         .set("anchorKey", textEditorChanges.anchorKey)
         .set("focusKey", textEditorChanges.focusKey)
         .set("focusOffset", textEditorChanges.focusOffset - 1)
         .set("anchorOffset", textEditorChanges.anchorOffset - 1);
-      const contentState = editorState.getCurrentContent();
+
       const ncs = Modifier.insertText(
         contentState,
         selection,
         textEditorChanges.char
       );
-      const es = EditorState.push(editorState, ncs, textEditorChanges.command);
-      dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
+      const es = EditorState.push(
+        editorState,
+        ncs
+          .set("selectionBefore", savedSelection)
+          .set("selectionAfter", savedSelection),
+        textEditorChanges.command
+      );
+      onEditorChange(es, false);
       return;
     }
     case COMMANDS.REMOVE_RANGE:
@@ -162,8 +196,7 @@ function onExistingBlock(textEditorChanges, editorState, dispatch) {
         "backward"
       );
       const es = EditorState.push(editorState, ncs, textEditorChanges.command);
-
-      dispatch({ type: TYPES.ON_CHANGE, payload: { editorState: es } });
+      onEditorChange(es, false);
       return;
     }
   }
@@ -202,7 +235,7 @@ export function gatherEditorChanges(editorState) {
       return {
         char,
         command,
-        focusOffset,
+        focusOffset: rawState.currentContent.selectionBefore.focusOffset,
         anchorKey: rawState.currentContent.selectionAfter.anchorKey,
         focusKey: rawState.currentContent.selectionBefore.focusKey,
         anchorOffset

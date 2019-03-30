@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const StyledRoom = styled.div`
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   background: #ffffff;
   margin: 8px;
 `;
@@ -21,4 +21,6 @@ export const StyledRoomTitle = styled.div`
 export const StyledEditorContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
+  height: 90vh;
+  overflow-y: auto;
 `;

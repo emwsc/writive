@@ -26,8 +26,12 @@ const Room = props => {
   }
 
   const emitTextEditorChanges = textEditorChanges => {
-    if (!socket) return;
-    socket.emit("emitTextEditorChanges", textEditorChanges);
+    if (!socket || !textEditorChanges.command) return;
+    debugger;
+    socket.emit("emitTextEditorChanges", {
+      ...textEditorChanges,
+      socketId: socket.id
+    });
   };
 
   function emitCurrentEditorState(socketId, socket) {
@@ -47,7 +51,11 @@ const Room = props => {
   const events = [
     {
       eventName: "recieveTextEditorChanges",
-      handler: setTextEditorChanges
+      handler: (changes, socket) => {
+        debugger;
+        if (socket.id === changes.socketId) return;
+        setTextEditorChanges(changes);
+      }
     },
     {
       eventName: "connectionsCountChanges",

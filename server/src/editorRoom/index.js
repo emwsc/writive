@@ -73,7 +73,7 @@ function handleRoom(io, socket) {
           editorChanges.command
         }`
       );
-      socket.to(room).emit("recieveTextEditorChanges", editorChanges);
+      socket.broadcast.to(room).emit("recieveTextEditorChanges", editorChanges);
     });
   });
 }
