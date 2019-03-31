@@ -65,76 +65,6 @@ export function useOnTextEditorRemoteChanges(
  * @param {function} onEditorChange
  */
 function onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange) {
-  // let newBlockMap = null;
-  // switch (textEditorChanges.command) {
-  //   case COMMANDS.NEWLINE: {
-  //     debugger;
-  //     const currentBlock = editorState
-  //       .getCurrentContent()
-  //       .getBlockForKey(textEditorChanges.focusKey);
-  //     const currentBlockObj = currentBlock.toObject();
-  //     const currentText = currentBlockObj.text;
-  //     let newBlockText = "";
-  //     if (textEditorChanges.focusOffset < currentText.length) {
-  //       newBlockText = currentText.substr(textEditorChanges.focusOffset);
-  //       onExistingBlock(
-  //         {
-  //           command: COMMANDS.REMOVE_RANGE,
-  //           focusOffset: currentText.length,
-  //           anchorKey: textEditorChanges.focusKey,
-  //           focusKey: textEditorChanges.focusKey,
-  //           anchorOffset: textEditorChanges.focusOffset
-  //         },
-  //         editorState,
-  //         onEditorChange
-  //       );
-  //     }
-
-  //     const newBlock = new ContentBlock({
-  //       key: textEditorChanges.anchorKey,
-  //       text: newBlockText,
-  //       characterList: new List(
-  //         Repeat(CharacterMetadata.create(), newBlockText.length)
-  //       ),
-  //       type: "unstyled"
-  //     });
-
-  //     const blocksBefore = blockMap.toSeq().takeUntil(function(v) {
-  //       return v === currentBlock;
-  //     });
-  //     const blocksAfter = blockMap
-  //       .toSeq()
-  //       .skipUntil(function(v) {
-  //         return v === currentBlock;
-  //       })
-  //       .rest();
-  //     let newBlocks = [
-  //       [currentBlock.getKey(), currentBlock],
-  //       [newBlock.getKey(), newBlock]
-  //     ];
-  //     newBlockMap = blocksBefore.concat(newBlocks, blocksAfter).toOrderedMap();
-  //     break;
-  //   }
-  //   case COMMANDS.INSERT_TEXT: {
-  //     const newBlock = new ContentBlock({
-  //       key: textEditorChanges.anchorKey,
-  //       text: textEditorChanges.char ? textEditorChanges.char : "",
-  //       characterList: new List(
-  //         Repeat(
-  //           CharacterMetadata.create(),
-  //           textEditorChanges.char ? textEditorChanges.char.length : 0
-  //         )
-  //       ),
-  //       type: "unstyled"
-  //     });
-  //     newBlockMap = blockMap
-  //       .toSeq()
-  //       .concat([[newBlock.getKey(), newBlock]])
-  //       .toOrderedMap();
-  //     break;
-  //   }
-  // }
-  debugger;
   let editorStateForNewBlock = null;
   let currentBlock = editorState
     .getCurrentContent()
@@ -144,18 +74,6 @@ function onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange) {
   let newBlockText = "";
   if (textEditorChanges.focusOffset < currentText.length) {
     newBlockText = currentText.substr(textEditorChanges.focusOffset);
-    // onExistingBlock(
-    //   {
-    //     command: COMMANDS.REMOVE_RANGE,
-    //     focusOffset: currentText.length,
-    //     anchorKey: textEditorChanges.focusKey,
-    //     focusKey: textEditorChanges.focusKey,
-    //     anchorOffset: textEditorChanges.focusOffset
-    //   },
-    //   editorState,
-    //   onEditorChange
-    // );
-
     const selectionState = editorState
       .getSelection()
       .set("anchorKey", textEditorChanges.focusKey)

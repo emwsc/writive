@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import socketIOClient from "socket.io-client";
 import { getConnectionUrl } from "../../common/utils";
+import calculateSize from "calculate-size";
 
 /**
  * Hook on room load
@@ -12,9 +13,9 @@ export function useOnRoomLoad(roomhash, setSocket, events) {
   useEffect(() => {
     const url = getConnectionUrl();
     const socket = socketIOClient(url);
-    setSocket(socket);
     socket.emit("join", roomhash);
     connectEventHandlers(socket, events);
+    setSocket(socket);
   }, [roomhash]);
 }
 
@@ -57,4 +58,21 @@ export function getConnections(roomhash) {
   return fetch(url + "/api/v1/getConnections?room=" + roomhash).then(result =>
     result.text()
   );
+}
+
+export function getTextWidth(text) {
+  // const font = '14px "Montserrat", sans-serif';
+  // var canvas =
+  //   getTextWidth.canvas ||
+  //   (getTextWidth.canvas = document.createElement("canvas"));
+  // var context = canvas.getContext("2d");
+  // context.font = font;
+  // var metrics = context.measureText(text);
+  // return metrics.width;
+  const size = calculateSize(text, {
+    font: '"Montserrat", sans-serif',
+    fontSize: "14px"
+  });
+
+  return size.width;
 }

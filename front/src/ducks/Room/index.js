@@ -3,25 +3,37 @@ import {
   StyledRoom,
   StyledEditorContainer,
   StyledTop,
-  StyledRoomTitle
+  StyledRoomTitle,
+  StyledCursor
 } from "./styled";
-import { useOnRoomLoad, getConnections } from "./utils";
+import { useOnRoomLoad, getConnections, getTextWidth } from "./utils";
 import TextEditor from "../Editor";
 import ConnectedUsers from "./ConnectedUsers";
 
 const Room = props => {
   const { match } = props;
+
   const editorRef = useRef(null);
+  const cursorRef = useRef();
+
   const [socket, setSocket] = useState();
   const [initialRawContent, setInitialRawContent] = useState(null);
   const [latestTextEditorChanges, setTextEditorChanges] = useState();
+  const [userColor, setUserColor] = useState(null);
   const [connections, setConnections] = useState({
     count: 0
   });
 
-  function checkConnections() {
+  /**
+   * Check current connections to room
+   */
+  function checkConnections(socket) {
     getConnections(match.params.roomhash).then(connectionsJson => {
-      if (connectionsJson) setConnections(JSON.parse(connectionsJson));
+      if (connectionsJson) {
+        const connections = JSON.parse(connectionsJson);
+        setUserColor(connections.clients[socket.id].color);
+        setConnections(connections);
+      }
     });
   }
 
@@ -44,7 +56,16 @@ const Room = props => {
   const textEditorProps = {
     emitTextEditorChanges,
     latestTextEditorChanges,
-    initialRawContent
+    initialRawContent,
+    userColor
+  };
+
+  const setCursor = (focusKey) => {
+    const el = document.querySelector(`[data-offset-key='${focusKey}-0-0']`);
+    const position = el.getBoundingClientRect();
+    var text = el.innerText;
+    const textWidth = getTextWidth(text);
+    cursorRef.current.style.left = textWidth + position.left + 14 + "px";
   };
 
   const events = [
@@ -53,11 +74,12 @@ const Room = props => {
       handler: (changes, socket) => {
         if (socket.id === changes.socketId) return;
         setTextEditorChanges(changes);
+        //setCursor(changes.focusKey, changes.focusOffset);
       }
     },
     {
       eventName: "connectionsCountChanges",
-      handler: checkConnections
+      handler: socket => checkConnections(socket)
     },
     {
       eventName: "getCurrentEditorState",
@@ -71,7 +93,7 @@ const Room = props => {
     }
   ];
 
-  useOnRoomLoad(match.params.roomhash, setSocket, events, checkConnections);
+  useOnRoomLoad(match.params.roomhash, setSocket, events);
 
   return (
     <StyledRoom>
@@ -83,6 +105,7 @@ const Room = props => {
           <ConnectedUsers connections={connections} />
         </div>
       </StyledTop>
+      {/* <StyledCursor ref={cursorRef} /> */}
       <StyledEditorContainer>
         <TextEditor ref={editorRef} {...textEditorProps} />
       </StyledEditorContainer>

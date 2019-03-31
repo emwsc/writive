@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const StyledRoom = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   background: #ffffff;
   margin: 8px;
 `;
@@ -23,4 +23,12 @@ export const StyledEditorContainer = styled.div`
   margin: 0 auto;
   height: 90vh;
   overflow-y: auto;
+  font-size: 14px;
+`;
+
+export const StyledCursor = styled.div`
+  background: #f44336;
+  position: absolute;
+  width: 2px;
+  height: 20px;
 `;

@@ -1,4 +1,5 @@
 const utils = require("../../common/utils");
+const randomColor = require("randomcolor");
 
 const roomConnections = {};
 
@@ -18,6 +19,9 @@ function pushConnection(room, socketId) {
     const pokemonIndex = utils.getRandomInt(1, 50);
     roomConnections[room].count++;
     roomConnections[room].clients[socketId] = {
+      color: randomColor({
+        luminosity: "dark"
+      }),
       socketId,
       imgSrc: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonIndex}.png`
     };
