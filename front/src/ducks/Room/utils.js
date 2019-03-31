@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import socketIOClient from "socket.io-client";
 import { getConnectionUrl } from "../../common/utils";
-import calculateSize from "calculate-size";
 
 /**
  * Hook on room load
@@ -60,19 +59,15 @@ export function getConnections(roomhash) {
   );
 }
 
-export function getTextWidth(text) {
-  // const font = '14px "Montserrat", sans-serif';
-  // var canvas =
-  //   getTextWidth.canvas ||
-  //   (getTextWidth.canvas = document.createElement("canvas"));
-  // var context = canvas.getContext("2d");
-  // context.font = font;
-  // var metrics = context.measureText(text);
-  // return metrics.width;
-  const size = calculateSize(text, {
-    font: '"Montserrat", sans-serif',
-    fontSize: "14px"
-  });
 
-  return size.width;
-}
+
+export function setEventHandlers({
+  setTextEditorChanges,
+  connections,
+  setCursor,
+  checkConnections,
+  emitCurrentEditorState,
+  setInitialRawContent
+}) {}
+
+export function onRecieveTextEditorChanges() {}

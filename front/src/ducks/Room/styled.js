@@ -26,9 +26,3 @@ export const StyledEditorContainer = styled.div`
   font-size: 14px;
 `;
 
-export const StyledCursor = styled.div`
-  background: #f44336;
-  position: absolute;
-  width: 2px;
-  height: 20px;
-`;
