@@ -1,9 +1,8 @@
-import React, { useEffect, useReducer, useImperativeHandle } from "react";
+import React, { useReducer, useImperativeHandle } from "react";
 import {
   Editor,
   EditorState,
   convertToRaw,
-  convertFromRaw,
   getDefaultKeyBinding
 } from "draft-js";
 import "../../../node_modules/draft-js/dist/Draft.css";
@@ -11,7 +10,12 @@ import reducer from "./reducer";
 import TYPES from "./types";
 import COMMANDS from "./commands";
 import { EDITOR_PLACEHOLDER } from "./constants";
-import { useOnTextEditorRemoteChanges, gatherEditorChanges } from "./utils";
+import {
+  useOnTextEditorRemoteChanges,
+  gatherEditorChanges,
+  gatherEditorChangesOnInput,
+  useEditorInitialState
+} from "./utils";
 
 const TextEditor = (props, ref) => {
   const {
@@ -25,25 +29,17 @@ const TextEditor = (props, ref) => {
     EditorState.createEmpty()
   );
 
-  useEffect(() => {
-    if (initialRawContent) {
-      dispatch({
-        type: TYPES.ON_CHANGE,
-        payload: {
-          editorState: EditorState.createWithContent(
-            convertFromRaw(initialRawContent)
-          )
-        }
-      });
-    }
-  }, [initialRawContent]);
-
   useImperativeHandle(ref, () => {
     return {
       rawContent: convertToRaw(editorState.getCurrentContent())
     };
   });
 
+  /**
+   * Update editor state
+   * @param {EditorState} nextEditorState
+   * @param {boolean} emitNext
+   */
   const onEditorChange = (nextEditorState, emitNext = true) => {
     dispatch({
       type: TYPES.ON_CHANGE,
@@ -71,25 +67,14 @@ const TextEditor = (props, ref) => {
    * @param {object} editorState
    */
   const handleBeforeInput = (char, editorState) => {
-    const selectionState = editorState.getSelection();
-    const anchorKey = selectionState.getAnchorKey(),
-      anchorOffset = selectionState.getAnchorOffset() + 1,
-      focusOffset = selectionState.getFocusOffset() + 1,
-      focusKey = selectionState.getFocusKey();
-    const changes = {
-      char,
-      command: COMMANDS.INSERT_TEXT,
-      focusOffset,
-      anchorKey,
-      focusKey,
-      anchorOffset
-    };
-    emitTextEditorChanges(changes);
+    emitTextEditorChanges({ ...gatherEditorChangesOnInput(editorState), char });
   };
 
   const handleReturn = (event, editorState) => {
     debugger;
   };
+
+  useEditorInitialState(initialRawContent, dispatch);
 
   useOnTextEditorRemoteChanges(
     latestTextEditorChanges,

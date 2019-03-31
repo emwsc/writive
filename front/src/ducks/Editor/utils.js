@@ -4,7 +4,8 @@ import {
   EditorState,
   Modifier,
   ContentBlock,
-  CharacterMetadata
+  CharacterMetadata,
+  convertFromRaw
 } from "draft-js";
 import { List, Repeat } from "immutable";
 import TYPES from "./types";
@@ -41,7 +42,6 @@ export function useOnTextEditorRemoteChanges(
       (textEditorChanges.command === COMMANDS.INSERT_TEXT &&
         (!textEditorChanges.char || textEditorChanges.char === ""));
     if (noChanges) return;
-    debugger;
     const contentState = editorState.getCurrentContent();
     const blockMap = contentState.getBlockMap();
     // const block = blockMap.get(textEditorChanges.anchorKey);
@@ -61,86 +61,149 @@ export function useOnTextEditorRemoteChanges(
  * Append new block to text editor. If it's new line, then we search for prev block and append new block after him
  * @param {object} textEditorChanges
  * @param {Map} blockMap
- * @param {object} editorState
+ * @param {EditorState} editorState
  * @param {function} onEditorChange
  */
 function onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange) {
-  let newBlockMap = null;
-  switch (textEditorChanges.command) {
-    case COMMANDS.NEWLINE: {
-      debugger;
-      const currentBlock = editorState
-        .getCurrentContent()
-        .getBlockForKey(textEditorChanges.focusKey);
-      const currentBlockObj = currentBlock.toObject();
-      const currentText = currentBlockObj.text;
-      let newBlockText = "";
-      if (textEditorChanges.focusOffset < currentText.length) {
-        newBlockText = currentText.substr(textEditorChanges.focusOffset);
-        onExistingBlock(
-          {
-            command: COMMANDS.REMOVE_RANGE,
-            focusOffset: currentText.length,
-            anchorKey: textEditorChanges.focusKey,
-            focusKey: textEditorChanges.focusKey,
-            anchorOffset: textEditorChanges.focusOffset
-          },
-          editorState,
-          onEditorChange
-        );
-      }
+  // let newBlockMap = null;
+  // switch (textEditorChanges.command) {
+  //   case COMMANDS.NEWLINE: {
+  //     debugger;
+  //     const currentBlock = editorState
+  //       .getCurrentContent()
+  //       .getBlockForKey(textEditorChanges.focusKey);
+  //     const currentBlockObj = currentBlock.toObject();
+  //     const currentText = currentBlockObj.text;
+  //     let newBlockText = "";
+  //     if (textEditorChanges.focusOffset < currentText.length) {
+  //       newBlockText = currentText.substr(textEditorChanges.focusOffset);
+  //       onExistingBlock(
+  //         {
+  //           command: COMMANDS.REMOVE_RANGE,
+  //           focusOffset: currentText.length,
+  //           anchorKey: textEditorChanges.focusKey,
+  //           focusKey: textEditorChanges.focusKey,
+  //           anchorOffset: textEditorChanges.focusOffset
+  //         },
+  //         editorState,
+  //         onEditorChange
+  //       );
+  //     }
 
-      const newBlock = new ContentBlock({
-        key: textEditorChanges.anchorKey,
-        text: newBlockText,
-        characterList: new List(
-          Repeat(CharacterMetadata.create(), newBlockText.length)
-        ),
-        type: "unstyled"
-      });
+  //     const newBlock = new ContentBlock({
+  //       key: textEditorChanges.anchorKey,
+  //       text: newBlockText,
+  //       characterList: new List(
+  //         Repeat(CharacterMetadata.create(), newBlockText.length)
+  //       ),
+  //       type: "unstyled"
+  //     });
 
-      const blocksBefore = blockMap.toSeq().takeUntil(function(v) {
-        return v === currentBlock;
-      });
-      const blocksAfter = blockMap
-        .toSeq()
-        .skipUntil(function(v) {
-          return v === currentBlock;
-        })
-        .rest();
-      let newBlocks = [
-        [currentBlock.getKey(), currentBlock],
-        [newBlock.getKey(), newBlock]
-      ];
-      newBlockMap = blocksBefore.concat(newBlocks, blocksAfter).toOrderedMap();
-      break;
-    }
-    case COMMANDS.INSERT_TEXT: {
-      const newBlock = new ContentBlock({
-        key: textEditorChanges.anchorKey,
-        text: textEditorChanges.char ? textEditorChanges.char : "",
-        characterList: new List(
-          Repeat(
-            CharacterMetadata.create(),
-            textEditorChanges.char ? textEditorChanges.char.length : 0
-          )
-        ),
-        type: "unstyled"
-      });
-      newBlockMap = blockMap
-        .toSeq()
-        .concat([[newBlock.getKey(), newBlock]])
-        .toOrderedMap();
-      break;
-    }
+  //     const blocksBefore = blockMap.toSeq().takeUntil(function(v) {
+  //       return v === currentBlock;
+  //     });
+  //     const blocksAfter = blockMap
+  //       .toSeq()
+  //       .skipUntil(function(v) {
+  //         return v === currentBlock;
+  //       })
+  //       .rest();
+  //     let newBlocks = [
+  //       [currentBlock.getKey(), currentBlock],
+  //       [newBlock.getKey(), newBlock]
+  //     ];
+  //     newBlockMap = blocksBefore.concat(newBlocks, blocksAfter).toOrderedMap();
+  //     break;
+  //   }
+  //   case COMMANDS.INSERT_TEXT: {
+  //     const newBlock = new ContentBlock({
+  //       key: textEditorChanges.anchorKey,
+  //       text: textEditorChanges.char ? textEditorChanges.char : "",
+  //       characterList: new List(
+  //         Repeat(
+  //           CharacterMetadata.create(),
+  //           textEditorChanges.char ? textEditorChanges.char.length : 0
+  //         )
+  //       ),
+  //       type: "unstyled"
+  //     });
+  //     newBlockMap = blockMap
+  //       .toSeq()
+  //       .concat([[newBlock.getKey(), newBlock]])
+  //       .toOrderedMap();
+  //     break;
+  //   }
+  // }
+  debugger;
+  let editorStateForNewBlock = null;
+  let currentBlock = editorState
+    .getCurrentContent()
+    .getBlockForKey(textEditorChanges.focusKey);
+  const currentBlockObj = currentBlock.toObject();
+  const currentText = currentBlockObj.text;
+  let newBlockText = "";
+  if (textEditorChanges.focusOffset < currentText.length) {
+    newBlockText = currentText.substr(textEditorChanges.focusOffset);
+    // onExistingBlock(
+    //   {
+    //     command: COMMANDS.REMOVE_RANGE,
+    //     focusOffset: currentText.length,
+    //     anchorKey: textEditorChanges.focusKey,
+    //     focusKey: textEditorChanges.focusKey,
+    //     anchorOffset: textEditorChanges.focusOffset
+    //   },
+    //   editorState,
+    //   onEditorChange
+    // );
+
+    const selectionState = editorState
+      .getSelection()
+      .set("anchorKey", textEditorChanges.focusKey)
+      .set("focusKey", textEditorChanges.focusKey)
+      .set("focusOffset", currentText.length)
+      .set("anchorOffset", textEditorChanges.focusOffset);
+    const contentState = editorState.getCurrentContent();
+    const ncs = Modifier.removeRange(contentState, selectionState, "backward");
+    const es = EditorState.push(editorState, ncs, textEditorChanges.command);
+    editorStateForNewBlock = es;
+    currentBlock = editorStateForNewBlock
+      .getCurrentContent()
+      .getBlockForKey(textEditorChanges.focusKey);
   }
+  if (editorStateForNewBlock == null) editorStateForNewBlock = editorState;
 
-  const mergedContentState = editorState.getCurrentContent().merge({
+  const newBlock = new ContentBlock({
+    key: textEditorChanges.anchorKey,
+    text: newBlockText,
+    characterList: new List(
+      Repeat(CharacterMetadata.create(), newBlockText.length)
+    ),
+    type: "unstyled"
+  });
+
+  const blocksBefore = blockMap.toSeq().takeUntil(function(v) {
+    return v === currentBlock;
+  });
+  const blocksAfter = blockMap
+    .toSeq()
+    .skipUntil(function(v) {
+      return v === currentBlock;
+    })
+    .rest();
+  let newBlocks = [
+    [currentBlock.getKey(), currentBlock],
+    [newBlock.getKey(), newBlock]
+  ];
+  const newBlockMap = blocksBefore
+    .concat(newBlocks, blocksAfter)
+    .toOrderedMap();
+
+  const mergedContentState = editorStateForNewBlock.getCurrentContent().merge({
     blockMap: newBlockMap
   });
   if (newBlockMap) {
     const es = EditorState.push(
-      editorState,
+      editorStateForNewBlock,
       mergedContentState,
       "insert-fragment"
     );
@@ -151,7 +214,7 @@ function onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange) {
 /**
  * Insert text into existing block in text editor
  * @param {object} textEditorChanges
- * @param {object} editorState
+ * @param {EditorState} editorState
  * @param {function} onEditorChange
  */
 function onExistingBlock(textEditorChanges, editorState, onEditorChange) {
@@ -204,7 +267,7 @@ function onExistingBlock(textEditorChanges, editorState, onEditorChange) {
 
 /**
  * Getting meaningful information of editor state changes
- * @param {object} editorState
+ * @param {EditorState} editorState
  */
 export function gatherEditorChanges(editorState) {
   const rawState = editorState.toJS();
@@ -255,35 +318,41 @@ export function gatherEditorChanges(editorState) {
 }
 
 /**
- * Check changes
- * @param {object} prev
- * @param {next} next
+ * Getting meaningful information of editor state changes only for input and on handleBeforeInput event
+ * @param {EditorState} editorState
  */
-export function hasTextEditorChanges(prev, next) {
-  if (!prev || !next) return false;
-  const rawPrevState = prev.toJS();
-  const rawNextState = next.toJS();
+export function gatherEditorChangesOnInput(editorState) {
+  const selectionState = editorState.getSelection();
+  const anchorKey = selectionState.getAnchorKey(),
+    anchorOffset = selectionState.getAnchorOffset() + 1,
+    focusOffset = selectionState.getFocusOffset() + 1,
+    focusKey = selectionState.getFocusKey();
 
-  const prevContent = rawPrevState.currentContent;
-  const prevSelection = rawPrevState.selection;
-  const prevAnchorKey = prevSelection.anchorKey;
-  const prevBlockMap = prevContent.blockMap;
+  return {
+    command: COMMANDS.INSERT_TEXT,
+    focusOffset,
+    anchorKey,
+    focusKey,
+    anchorOffset
+  };
+}
 
-  const nextContent = rawNextState.currentContent;
-  const nextSelection = rawNextState.selection;
-  const nextAnchorKey = nextSelection.anchorKey;
-  const nextBlockMap = nextContent.blockMap;
-  /**
-   * We are on same block of text
-   */
-  if (prevAnchorKey === nextAnchorKey)
-    return (
-      prevBlockMap[prevAnchorKey].text !== nextBlockMap[nextAnchorKey].text
-    );
-  else {
-    return (
-      !prevBlockMap[nextAnchorKey] ||
-      prevBlockMap[nextAnchorKey].text !== nextBlockMap[nextAnchorKey].text
-    );
-  }
+/**
+ * Hookm for setting initial editor set, when you already have clients with some text
+ * @param {object} initialRawContent
+ * @param {function} dispatch
+ */
+export function useEditorInitialState(initialRawContent, dispatch) {
+  useEffect(() => {
+    if (initialRawContent) {
+      dispatch({
+        type: TYPES.ON_CHANGE,
+        payload: {
+          editorState: EditorState.createWithContent(
+            convertFromRaw(initialRawContent)
+          )
+        }
+      });
+    }
+  }, [initialRawContent]);
 }
