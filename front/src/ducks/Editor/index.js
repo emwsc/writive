@@ -8,7 +8,7 @@ import {
 import "../../../node_modules/draft-js/dist/Draft.css";
 import reducer from "./reducer";
 import TYPES from "./types";
-import COMMANDS from "./commands";
+import COMMANDS from "../../common/commands";
 import { EDITOR_PLACEHOLDER } from "./constants";
 import {
   useOnTextEditorRemoteChanges,

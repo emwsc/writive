@@ -1,17 +1,19 @@
 import React, { useEffect } from "react";
 import { StyledCursor } from "./styled";
 import { getTextWidth } from "./utils";
+import COMMANDS from "../../../../common/commands";
 
 const Cursor = ({
   client,
-  focusKey,
-  focusOffset,
+  blockKey,
+  offset,
   socketId,
+  command,
   positions,
   setPositions
 }) => {
   const textContainerElement = document.querySelector(
-    `[data-offset-key='${focusKey}-0-0']`
+    `[data-offset-key='${blockKey}-0-0']`
   );
   if (!textContainerElement || !client) return null;
 
@@ -19,12 +21,14 @@ const Cursor = ({
   const editorPosition = editorElement.getBoundingClientRect();
 
   const position = textContainerElement.getBoundingClientRect();
-  const text = textContainerElement.innerText.substr(0, focusOffset);
+  const text = textContainerElement.innerText.substr(0, offset);
   const textWidth = getTextWidth(text);
+
+  const additionalOffset = command === COMMANDS.INSERT_TEXT ? 14 : 2;
 
   let left =
     client.socketId === socketId
-      ? textWidth + position.left + 14
+      ? textWidth + position.left + additionalOffset
       : positions[client.socketId]
       ? positions[client.socketId].left
       : null;
@@ -37,8 +41,9 @@ const Cursor = ({
       : null;
 
   if (left && top) {
-    while (left >= editorPosition.width) {
+    while (left - position.left >= editorPosition.width) {
       left -= editorPosition.width;
+      left += additionalOffset;
       top += 18;
     }
   }
@@ -60,7 +65,7 @@ const Cursor = ({
       color
     };
     if (color) setPositions(updatedPositions);
-  }, [socketId, focusKey, focusOffset]);
+  }, [socketId, blockKey, offset]);
 
   left = left;
   top = top;

@@ -65,24 +65,12 @@ const Room = props => {
     userColor
   };
 
-  const setCursor = (focusKey, socketId) => {
-    // const el = document.querySelector(`[data-offset-key='${focusKey}-0-0']`);
-    // const position = el.getBoundingClientRect();
-    // var text = el.innerText;
-    // const textWidth = getTextWidth(text);
-    // const connections = connectionsRef.current;
-    // cursorRef.current.style.background = connections.clients[socketId].color;
-    // cursorRef.current.style.left = textWidth + position.left + 14 + "px";
-    // cursorRef.current.style.top = position.top + "px";
-  };
-
   const events = [
     {
       eventName: "recieveTextEditorChanges",
       handler: (changes, socket) => {
         if (socket.id === changes.socketId) return;
         setTextEditorChanges(changes);
-        //setCursor(changes.focusKey, changes.socketId);
       }
     },
     {
@@ -113,13 +101,10 @@ const Room = props => {
           <ConnectedUsers connections={connections} />
         </div>
       </StyledTop>
-      {/* <StyledCursor ref={cursorRef} /> */}
       <Cursors
         currentSocketId={socket ? socket.id : null}
         connections={connections}
-        focusKey={latestTextEditorChanges.focusKey}
-        focusOffset={latestTextEditorChanges.focusOffset}
-        socketId={latestTextEditorChanges.socketId}
+        textEditorChanges={latestTextEditorChanges}
         positions={positions}
         setPositions={setPositions}
       />

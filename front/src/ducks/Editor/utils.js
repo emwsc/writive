@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import COMMANDS from "./commands";
+import COMMANDS from "../../common/commands";
 import {
   EditorState,
   Modifier,
