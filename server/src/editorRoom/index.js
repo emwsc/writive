@@ -1,14 +1,17 @@
 const utils = require("../../common/utils");
 const randomColor = require("randomcolor");
+const names = require("../names");
+const process = require("process");
 
 const roomConnections = {};
 
 /**
  * Store connection info into global object
  * @param {string} room
+ * @param {string} name
  * @param {string} socketId
  */
-function pushConnection(room, socketId) {
+function pushConnection(room, name, socketId) {
   console.log(`${new Date().toLocaleString()} pushConnection ${socketId}`);
   if (!roomConnections[room])
     roomConnections[room] = {
@@ -22,10 +25,12 @@ function pushConnection(room, socketId) {
       color: randomColor({
         luminosity: "dark"
       }),
+      name: "",
       socketId,
       imgSrc: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonIndex}.png`
     };
   }
+  roomConnections[room].clients[socketId].name = name;
 }
 
 /**
@@ -49,8 +54,11 @@ function popConnection(room, socketId) {
 function handleRoom(io, socket) {
   socket.on("join", function(room) {
     socket.join(room);
-    pushConnection(room, socket.id);
-    io.to(room).emit("connectionsCountChanges");
+
+    names.getRandomName().then(name => {
+      pushConnection(room, name, socket.id);
+      io.to(room).emit("connectionsCountChanges");
+    });
 
     socket.on("disconnect", function() {
       popConnection(room, socket.id);

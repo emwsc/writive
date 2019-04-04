@@ -13,10 +13,6 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.get("/", function(req, res) {
-  res.send("<h1>Hello world</h1>");
-});
-
 app.get("/api/v1/generateRoomHash", (req, res) => {
   words.getRandomWords(5, randomWords => {
     const roomHash = randomWords.join("-");

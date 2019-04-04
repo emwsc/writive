@@ -1,10 +1,9 @@
 import React from "react";
-import { getRandomInt } from "../../../../common/utils";
 import { StyledPockemon } from "./styled";
 
 const User = ({ client }) => {
   return (
-    <div>
+    <div title={client.name}>
       <StyledPockemon
         color={client.color}
         src={client.imgSrc}

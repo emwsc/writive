@@ -28,11 +28,13 @@ function getEffectKeys(textEditorChanges) {
  * @param {object} textEditorChanges
  * @param {object} editorState
  * @param {function} onEditorChange
+ * @param {function} setHasSyncErrors
  */
 export function useOnTextEditorRemoteChanges(
   textEditorChanges,
   editorState,
-  onEditorChange
+  onEditorChange,
+  setHasSyncErrors
 ) {
   useEffect(() => {
     console.log(textEditorChanges);
@@ -42,18 +44,15 @@ export function useOnTextEditorRemoteChanges(
       (textEditorChanges.command === COMMANDS.INSERT_TEXT &&
         (!textEditorChanges.char || textEditorChanges.char === ""));
     if (noChanges) return;
-    const contentState = editorState.getCurrentContent();
-    const blockMap = contentState.getBlockMap();
-    // const block = blockMap.get(textEditorChanges.anchorKey);
-
-    // if (!block && textEditorChanges.command === COMMANDS.INSERT_TEXT)
-    //   onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange);
-    // else if (textEditorChanges.command === COMMANDS.NEWLINE) {
-    //   onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange);
-    // } else if (block)
-    if (textEditorChanges.command === COMMANDS.NEWLINE)
-      onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange);
-    else onExistingBlock(textEditorChanges, editorState, onEditorChange);
+    try {
+      const contentState = editorState.getCurrentContent();
+      const blockMap = contentState.getBlockMap();
+      if (textEditorChanges.command === COMMANDS.NEWLINE)
+        onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange);
+      else onExistingBlock(textEditorChanges, editorState, onEditorChange);
+    } catch (e) {
+      setHasSyncErrors(true);
+    }
   }, getEffectKeys(textEditorChanges));
 }
 

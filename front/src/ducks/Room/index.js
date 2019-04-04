@@ -4,19 +4,21 @@ import {
   StyledEditorContainer,
   StyledTop,
   StyledRoomTitle,
-  StyledCursor
+  StyledCursor,
+  StyledRoomErrors
 } from "./styled";
-import { useOnRoomLoad, getConnections, getTextWidth } from "./utils";
+import { useOnRoomLoad, getConnections } from "./utils";
 import TextEditor from "../Editor";
 import ConnectedUsers from "./ConnectedUsers";
 import Cursors from "./Cursors";
+import SyncErrors from "./SyncErrors";
 
 const Room = props => {
   const { match } = props;
 
   const editorRef = useRef(null);
-  //const cursorRef = useRef();
 
+  const [hasSyncErrors, setHasSyncErrors] = useState(false);
   const [socket, setSocket] = useState();
   const [initialRawContent, setInitialRawContent] = useState(null);
   const [latestTextEditorChanges, setTextEditorChanges] = useState({});
@@ -35,7 +37,8 @@ const Room = props => {
     getConnections(match.params.roomhash).then(connectionsJson => {
       if (connectionsJson) {
         const connections = JSON.parse(connectionsJson);
-        setUserColor(connections.clients[socket.id].color);
+        if (connections.clients[socket.id])
+          setUserColor(connections.clients[socket.id].color);
         connectionsRef.current = connections;
         setConnections(connections);
       }
@@ -62,7 +65,16 @@ const Room = props => {
     emitTextEditorChanges,
     latestTextEditorChanges,
     initialRawContent,
-    userColor
+    userColor,
+    setHasSyncErrors
+  };
+
+  const cursorsProps = {
+    currentSocketId: socket ? socket.id : null,
+    connections,
+    textEditorChanges: latestTextEditorChanges,
+    positions,
+    setPositions
   };
 
   const events = [
@@ -89,28 +101,27 @@ const Room = props => {
     }
   ];
 
+  const roomName = match.params.roomhash.split("-").join(" ");
+
   useOnRoomLoad(match.params.roomhash, setSocket, events);
 
   return (
     <StyledRoom>
       <StyledTop>
         <div>
-          <StyledRoomTitle>
-            {match.params.roomhash.split("-").join(" ")}
-          </StyledRoomTitle>
+          <StyledRoomTitle>{roomName}</StyledRoomTitle>
           <ConnectedUsers connections={connections} />
         </div>
       </StyledTop>
-      <Cursors
-        currentSocketId={socket ? socket.id : null}
-        connections={connections}
-        textEditorChanges={latestTextEditorChanges}
-        positions={positions}
-        setPositions={setPositions}
-      />
+      <Cursors {...cursorsProps} />
       <StyledEditorContainer id="editor">
         <TextEditor ref={editorRef} {...textEditorProps} />
       </StyledEditorContainer>
+      {hasSyncErrors && (
+        <StyledRoomErrors>
+          <SyncErrors />
+        </StyledRoomErrors>
+      )}
     </StyledRoom>
   );
 };

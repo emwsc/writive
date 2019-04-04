@@ -21,7 +21,8 @@ const TextEditor = (props, ref) => {
   const {
     initialRawContent = null,
     emitTextEditorChanges,
-    latestTextEditorChanges = {}
+    latestTextEditorChanges = {},
+    setHasSyncErrors
   } = props;
 
   const [editorState, dispatch] = useReducer(
@@ -79,7 +80,8 @@ const TextEditor = (props, ref) => {
   useOnTextEditorRemoteChanges(
     latestTextEditorChanges,
     editorState,
-    onEditorChange
+    onEditorChange,
+    setHasSyncErrors
   );
 
   return (

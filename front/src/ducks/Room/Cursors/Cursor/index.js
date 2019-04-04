@@ -70,7 +70,9 @@ const Cursor = ({
   left = left;
   top = top;
 
-  return <StyledCursor left={left} top={top} color={color} />;
+  return (
+    <StyledCursor left={left} top={top} color={color} name={client.name} />
+  );
 };
 
 export default Cursor;
