@@ -12,11 +12,15 @@ import TextEditor from "../Editor";
 import ConnectedUsers from "./ConnectedUsers";
 import Cursors from "./Cursors";
 import SyncErrors from "./SyncErrors";
+import DragContainer from "../DragContainer";
+
+const prevPosition = {};
 
 const Room = props => {
   const { match } = props;
 
   const editorRef = useRef(null);
+  const handlerRef = useRef();
 
   const [hasSyncErrors, setHasSyncErrors] = useState(false);
   const [socket, setSocket] = useState();
@@ -26,7 +30,11 @@ const Room = props => {
   const [connections, setConnections] = useState({
     count: 0
   });
+
   const [positions, setPositions] = useState({});
+
+  const [isDraggable, setIsDraggable] = useState(false);
+  const [editorPosition, setEditorPosition] = useState({ x: null, y: null });
 
   const connectionsRef = useRef(connections);
 
@@ -105,8 +113,31 @@ const Room = props => {
 
   useOnRoomLoad(match.params.roomhash, setSocket, events);
 
+  const onMouseMove = e => {
+    const handlerBounding = handlerRef.current.getBoundingClientRect();
+    if (isDraggable) {
+      if (!prevPosition.x) prevPosition.x = e.pageX - handlerBounding.x;
+      if (!prevPosition.y) prevPosition.y = e.pageY - handlerBounding.y;
+      const diffX = e.pageX - handlerBounding.x - prevPosition.x;
+      const diffY = e.pageY - handlerBounding.y - prevPosition.y;
+      setEditorPosition({
+        x: handlerBounding.x + diffX,
+        y: handlerBounding.y + diffY - 65
+      });
+    }
+  };
+
   return (
-    <StyledRoom>
+    <StyledRoom
+      onMouseMove={onMouseMove}
+      onMouseUp={() => {
+        if (isDraggable) {
+          setIsDraggable(false);
+          prevPosition.x = null;
+          prevPosition.y = null;
+        }
+      }}
+    >
       <StyledTop>
         <div>
           <StyledRoomTitle>{roomName}</StyledRoomTitle>
@@ -114,9 +145,16 @@ const Room = props => {
         </div>
       </StyledTop>
       <Cursors {...cursorsProps} />
-      <StyledEditorContainer id="editor">
-        <TextEditor ref={editorRef} {...textEditorProps} />
-      </StyledEditorContainer>
+      <DragContainer
+        ref={handlerRef}
+        position={editorPosition}
+        isDraggable={isDraggable}
+        setIsDraggable={setIsDraggable}
+      >
+        <StyledEditorContainer id="editor">
+          <TextEditor ref={editorRef} {...textEditorProps} />
+        </StyledEditorContainer>
+      </DragContainer>
       {hasSyncErrors && (
         <StyledRoomErrors>
           <SyncErrors />

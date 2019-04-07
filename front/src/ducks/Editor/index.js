@@ -16,6 +16,7 @@ import {
   gatherEditorChangesOnInput,
   useEditorInitialState
 } from "./utils";
+import { StyledEditor } from "./styled";
 
 const TextEditor = (props, ref) => {
   const {
@@ -85,15 +86,17 @@ const TextEditor = (props, ref) => {
   );
 
   return (
-    <Editor
-      placeholder={EDITOR_PLACEHOLDER}
-      editorState={editorState}
-      onChange={onEditorChange}
-      handleKeyCommand={handleKeyCommand}
-      keyBindingFn={keyBinding}
-      handleReturn={handleReturn}
-      handleBeforeInput={handleBeforeInput}
-    />
+    <StyledEditor>
+      <Editor
+        placeholder={EDITOR_PLACEHOLDER}
+        editorState={editorState}
+        onChange={onEditorChange}
+        handleKeyCommand={handleKeyCommand}
+        keyBindingFn={keyBinding}
+        handleReturn={handleReturn}
+        handleBeforeInput={handleBeforeInput}
+      />
+    </StyledEditor>
   );
 };
 
