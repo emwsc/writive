@@ -3,7 +3,8 @@ import styled from "styled-components";
 export const StyledRoom = styled.div`
   font-family: "Montserrat", sans-serif;
   background: #ffffff;
-  margin: 8px;
+  height: calc(100vh - 20px);
+  width: calc(100vw - 25px);
 `;
 
 export const StyledTop = styled.div`

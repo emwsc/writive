@@ -1,1 +1,1 @@
-export const EDITOR_PLACEHOLDER = "Start your story";
+export const EDITOR_PLACEHOLDER = "Start typing";

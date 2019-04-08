@@ -262,11 +262,12 @@ export function gatherEditorChangesOnInput(editorState) {
 export function useEditorInitialState(initialRawContent, dispatch) {
   useEffect(() => {
     if (initialRawContent) {
+      debugger;
       dispatch({
         type: TYPES.ON_CHANGE,
         payload: {
           editorState: EditorState.createWithContent(
-            convertFromRaw(initialRawContent)
+            convertFromRaw(initialRawContent.rawContent)
           )
         }
       });

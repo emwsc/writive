@@ -1,11 +1,16 @@
 import styled from "styled-components";
 
 export const StyledDragContainer = styled.div`
-  position: relative;
-  left: ${({ position }) => (position.x ? position.x + "px" : null)};
-  top: ${({ position }) => (position.y ? position.y + "px" : null)};
-  width: 800px;
-  height: 900px;
+  position: absolute;
+  left: ${({ position }) =>
+    position && position.x ? position.x + "px" : null};
+  top: ${({ position }) => (position && position.y ? position.y + "px" : null)};
+  /* width: 800px;
+  height: 900px; */
+
+  min-width: 200px;
+  min-height: 200px;
+
   &:hover > div:first-child {
     display: block;
   }
@@ -16,7 +21,7 @@ export const StyledDragContainer = styled.div`
 `;
 
 export const StyledHandler = styled.div`
-  display: ${props => (props.isDraggable ? "block" : "none")};
+  display: ${props => (props.isVisible ? "block" : "none")};
   position: absolute;
   background: #e0e0e0;
   height: 15px;
@@ -29,9 +34,16 @@ export const StyledHandler = styled.div`
   &:after {
     content: "";
     position: absolute;
-    width: 97%;
-    border-top: 1px dotted #9e9e9e;
+    width: 100%;
+    border-top: 1px dashed #9e9e9e;
     top: 7px;
-    margin-left: 10px;
   }
+`;
+
+export const StyledOverflowContainer = styled.div`
+  resize: both;
+  overflow: auto;
+  position: relative;
+  min-width: 200px;
+  min-height: 200px;
 `;

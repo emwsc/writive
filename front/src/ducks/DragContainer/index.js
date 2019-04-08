@@ -1,22 +1,29 @@
 import React, { useState, forwardRef } from "react";
-import { StyledDragContainer, StyledHandler } from "./styled";
+import {
+  StyledDragContainer,
+  StyledHandler,
+  StyledOverflowContainer
+} from "./styled";
 
-const DragContainer = (
-  { children, position, isDraggable, setIsDraggable },
-  handlerRef
-) => {
+const DragContainer = ({
+  id,
+  children,
+  position,
+  draggableId,
+  setDraggableId
+}) => {
   return (
     <StyledDragContainer position={position}>
       <StyledHandler
-        ref={handlerRef}
-        isDraggable={isDraggable}
+        id={id}
+        isVisible={draggableId === id}
         onMouseDown={() => {
-          if (!isDraggable) setIsDraggable(true);
+          if (!draggableId || draggableId !== id) setDraggableId(id);
         }}
       />
-      {children}
+      <StyledOverflowContainer>{children}</StyledOverflowContainer>
     </StyledDragContainer>
   );
 };
 
-export default forwardRef(DragContainer);
+export default DragContainer;

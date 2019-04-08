@@ -73,7 +73,6 @@ const TextEditor = (props, ref) => {
   };
 
   const handleReturn = (event, editorState) => {
-    debugger;
   };
 
   useEditorInitialState(initialRawContent, dispatch);

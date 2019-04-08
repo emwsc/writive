@@ -4,7 +4,6 @@ import {
   StyledEditorContainer,
   StyledTop,
   StyledRoomTitle,
-  StyledCursor,
   StyledRoomErrors
 } from "./styled";
 import { useOnRoomLoad, getConnections } from "./utils";
@@ -13,6 +12,7 @@ import ConnectedUsers from "./ConnectedUsers";
 import Cursors from "./Cursors";
 import SyncErrors from "./SyncErrors";
 import DragContainer from "../DragContainer";
+import RoomItem from "./RoomItem";
 
 const prevPosition = {};
 
@@ -20,11 +20,11 @@ const Room = props => {
   const { match } = props;
 
   const editorRef = useRef(null);
-  const handlerRef = useRef();
+  //const handlerRef = useRef();
 
   const [hasSyncErrors, setHasSyncErrors] = useState(false);
   const [socket, setSocket] = useState();
-  const [initialRawContent, setInitialRawContent] = useState(null);
+  const [initialRawContent, setInitialRawContent] = useState({});
   const [latestTextEditorChanges, setTextEditorChanges] = useState({});
   const [userColor, setUserColor] = useState(null);
   const [connections, setConnections] = useState({
@@ -33,8 +33,10 @@ const Room = props => {
 
   const [positions, setPositions] = useState({});
 
-  const [isDraggable, setIsDraggable] = useState(false);
-  const [editorPosition, setEditorPosition] = useState({ x: null, y: null });
+  const [draggableId, setDraggableId] = useState(false);
+  const [editorPosition, setEditorPosition] = useState({});
+
+  const [roomItems, setRoomItems] = useState([]);
 
   const connectionsRef = useRef(connections);
 
@@ -62,17 +64,14 @@ const Room = props => {
   };
 
   function emitCurrentEditorState(socketId, socket) {
-    if (!socket) return;
+    if (!socket || !editorRef || !editorRef.current) return;
     socket.emit("sendCurrentEditorState", {
       to: socketId,
-      editorJson: JSON.stringify(editorRef.current.rawContent)
+      editorJson: JSON.stringify(editorRef.current)
     });
   }
 
   const textEditorProps = {
-    emitTextEditorChanges,
-    latestTextEditorChanges,
-    initialRawContent,
     userColor,
     setHasSyncErrors
   };
@@ -104,7 +103,13 @@ const Room = props => {
     {
       eventName: "setCurrentEditorState",
       handler: data => {
-        if (data) setInitialRawContent(JSON.parse(data));
+        if (data) {
+          const parsed = JSON.parse(data);
+          const ids = Object.keys(parsed);
+          const roomItems = ids.map(id => ({ id }));
+          setRoomItems(roomItems);
+          setInitialRawContent(parsed);
+        }
       }
     }
   ];
@@ -114,16 +119,26 @@ const Room = props => {
   useOnRoomLoad(match.params.roomhash, setSocket, events);
 
   const onMouseMove = e => {
-    const handlerBounding = handlerRef.current.getBoundingClientRect();
-    if (isDraggable) {
-      if (!prevPosition.x) prevPosition.x = e.pageX - handlerBounding.x;
-      if (!prevPosition.y) prevPosition.y = e.pageY - handlerBounding.y;
-      const diffX = e.pageX - handlerBounding.x - prevPosition.x;
-      const diffY = e.pageY - handlerBounding.y - prevPosition.y;
-      setEditorPosition({
+    if (draggableId) {
+      const handlerBounding = document
+        .getElementById(draggableId)
+        .getBoundingClientRect();
+      const top = document.getElementById("top");
+      const { height: topY } = top.getBoundingClientRect();
+      if (!prevPosition[draggableId]) prevPosition[draggableId] = {};
+      if (!prevPosition[draggableId].x)
+        prevPosition[draggableId].x = e.pageX - handlerBounding.x;
+      if (!prevPosition[draggableId].y)
+        prevPosition[draggableId].y = e.pageY - handlerBounding.y;
+      const diffX = e.pageX - handlerBounding.x - prevPosition[draggableId].x;
+      const diffY =
+        e.pageY - handlerBounding.y - prevPosition[draggableId].y - topY + 50;
+      const p = { ...editorPosition };
+      p[draggableId] = {
         x: handlerBounding.x + diffX,
-        y: handlerBounding.y + diffY - 65
-      });
+        y: handlerBounding.y + diffY
+      };
+      setEditorPosition(p);
     }
   };
 
@@ -131,30 +146,63 @@ const Room = props => {
     <StyledRoom
       onMouseMove={onMouseMove}
       onMouseUp={() => {
-        if (isDraggable) {
-          setIsDraggable(false);
-          prevPosition.x = null;
-          prevPosition.y = null;
+        if (draggableId) {
+          setDraggableId(null);
+          prevPosition[draggableId].x = null;
+          prevPosition[draggableId].y = null;
         }
       }}
     >
-      <StyledTop>
+      <StyledTop id="top">
         <div>
           <StyledRoomTitle>{roomName}</StyledRoomTitle>
           <ConnectedUsers connections={connections} />
         </div>
+        <button
+          onClick={() => {
+            const arr = [...roomItems];
+            arr.push({ id: "item-" + Math.random().toString(36) });
+            setRoomItems(arr);
+          }}
+        >
+          add item
+        </button>
       </StyledTop>
-      <Cursors {...cursorsProps} />
-      <DragContainer
+      {/* <Cursors {...cursorsProps} /> */}
+      {/* <DragContainer
         ref={handlerRef}
         position={editorPosition}
-        isDraggable={isDraggable}
-        setIsDraggable={setIsDraggable}
+        draggableId={draggableId}
+        setDraggableId={setDraggableId}
       >
         <StyledEditorContainer id="editor">
           <TextEditor ref={editorRef} {...textEditorProps} />
         </StyledEditorContainer>
-      </DragContainer>
+      </DragContainer> */}
+      {/* <RoomItem
+        ref={editorRef}
+        draggableId={draggableId}
+        setDraggableId={setDraggableId}
+        textEditorProps={textEditorProps}
+      /> */}
+      {roomItems.map(item => (
+        <RoomItem
+          key={item.id}
+          id={item.id}
+          ref={editorRef}
+          draggableId={draggableId}
+          setDraggableId={setDraggableId}
+          textEditorProps={textEditorProps}
+          emitTextEditorChanges={emitTextEditorChanges}
+          latestTextEditorChanges={
+            item.id === latestTextEditorChanges.roomItemId
+              ? latestTextEditorChanges
+              : {}
+          }
+          initialRawContent={initialRawContent[item.id]}
+          editorPosition={editorPosition[item.id]}
+        />
+      ))}
       {hasSyncErrors && (
         <StyledRoomErrors>
           <SyncErrors />
