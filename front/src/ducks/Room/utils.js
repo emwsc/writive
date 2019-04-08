@@ -84,7 +84,7 @@ export function calculateNewPositionOfRoomItemOnDrag(
     prevPosition[draggableId].y = e.pageY - handlerBounding.y;
   const diffX = e.pageX - handlerBounding.x - prevPosition[draggableId].x;
   const diffY =
-    e.pageY - handlerBounding.y - prevPosition[draggableId].y - topY + 75;
+    e.pageY - handlerBounding.y - prevPosition[draggableId].y - topY;
   const newPosition = { ...editorPosition };
   newPosition[draggableId] = {
     x: handlerBounding.x + diffX,

@@ -7,8 +7,13 @@ export const StyledDragContainer = styled.div`
   top: ${({ position }) => (position && position.y ? position.y + "px" : null)};
   min-width: 200px;
   min-height: 200px;
+  border: ${props => (props.showBorder ? " 1px solid lightgray" : "none")};
   &:hover > div:first-child {
     display: block;
+  }
+  &:hover > div:nth-child(2) {
+    resize: both;
+    overflow: auto;
   }
   &:hover {
     border: 1px solid lightgray;
@@ -17,7 +22,7 @@ export const StyledDragContainer = styled.div`
 `;
 
 export const StyledHandler = styled.div`
-  display: ${props => (props.isVisible ? "block" : "none")};
+  display: ${props => (props.showHandler ? "block" : "none")};
   position: absolute;
   background: #e0e0e0;
   height: 15px;
@@ -37,8 +42,8 @@ export const StyledHandler = styled.div`
 `;
 
 export const StyledOverflowContainer = styled.div`
-  resize: both;
-  overflow: auto;
+  resize: ${props => (props.showResizible ? "both" : "none")};
+  overflow: ${props => (props.showResizible ? "auto" : "unset")};
   position: relative;
   min-width: 200px;
   min-height: 200px;

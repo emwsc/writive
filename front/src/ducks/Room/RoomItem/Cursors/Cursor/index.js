@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { StyledCursor } from "./styled";
 import { getTextWidth } from "./utils";
-import COMMANDS from "../../../../common/commands";
+import COMMANDS from "../../../../../common/commands";
 
 const Cursor = ({
   roomId,

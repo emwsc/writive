@@ -5,6 +5,7 @@ export const StyledRoom = styled.div`
   background: #ffffff;
   height: calc(100vh - 20px);
   width: calc(100vw - 25px);
+  position: relative;
 `;
 
 export const StyledTop = styled.div`
@@ -45,4 +46,10 @@ export const StyledRoomErrors = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+`;
+
+export const StyledRoomItems = styled.div`
+position: absolute;
+width: 100%;
+height: 100%;
 `;

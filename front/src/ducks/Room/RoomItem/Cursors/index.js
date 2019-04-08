@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Cursor from "./Cursor";
-import COMMANDS from "../../../common/commands";
+import COMMANDS from "../../../../common/commands";
 
 const Cursors = React.memo(
   ({

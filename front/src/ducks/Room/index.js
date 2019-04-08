@@ -3,7 +3,8 @@ import {
   StyledRoom,
   StyledTop,
   StyledRoomTitle,
-  StyledRoomErrors
+  StyledRoomErrors,
+  StyledRoomItems
 } from "./styled";
 import {
   useOnRoomLoad,
@@ -31,7 +32,8 @@ const Room = props => {
   const [connections, setConnections] = useState({
     count: 0
   });
-  const [draggableId, setDraggableId] = useState(false);
+  const [draggableId, setDraggableId] = useState(null);
+  const [resizibleId, setResizibleId] = useState(null);
   const [editorPosition, setEditorPosition] = useState({});
   const [roomItems, setRoomItems] = useState([]);
 
@@ -118,6 +120,7 @@ const Room = props => {
           prevPosition[draggableId].x = null;
           prevPosition[draggableId].y = null;
         }
+        if (resizibleId) setResizibleId(null);
       }}
     >
       <StyledTop id="top">
@@ -145,31 +148,35 @@ const Room = props => {
           Add room item
         </button>
       </StyledTop>
-      {roomItems.map(item => {
-        const changes =
-          item.id === latestTextEditorChanges.roomItemId
-            ? latestTextEditorChanges
-            : {};
-        const position = editorPosition[item.id]
-          ? editorPosition[item.id]
-          : item.editorPosition;
-        return (
-          <RoomItem
-            key={item.id}
-            id={item.id}
-            ref={roomRef}
-            draggableId={draggableId}
-            setDraggableId={setDraggableId}
-            textEditorProps={textEditorProps}
-            emitTextEditorChanges={emitTextEditorChanges}
-            latestTextEditorChanges={changes}
-            initialRawContent={item.initialRawContent}
-            editorPosition={position}
-            connections={connections}
-            socketId={socket ? socket.id : null}
-          />
-        );
-      })}
+      <StyledRoomItems>
+        {roomItems.map(item => {
+          const changes =
+            item.id === latestTextEditorChanges.roomItemId
+              ? latestTextEditorChanges
+              : {};
+          const position = editorPosition[item.id]
+            ? editorPosition[item.id]
+            : item.editorPosition;
+          return (
+            <RoomItem
+              key={item.id}
+              id={item.id}
+              ref={roomRef}
+              resizibleId={resizibleId}
+              setResizibleId={setResizibleId}
+              draggableId={draggableId}
+              setDraggableId={setDraggableId}
+              textEditorProps={textEditorProps}
+              emitTextEditorChanges={emitTextEditorChanges}
+              latestTextEditorChanges={changes}
+              initialRawContent={item.initialRawContent}
+              editorPosition={position}
+              connections={connections}
+              socketId={socket ? socket.id : null}
+            />
+          );
+        })}
+      </StyledRoomItems>
       {hasSyncErrors && (
         <StyledRoomErrors>
           <SyncErrors />

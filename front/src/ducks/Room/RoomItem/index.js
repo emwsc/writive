@@ -6,12 +6,14 @@ import React, {
 } from "react";
 import DragContainer from "../../DragContainer";
 import TextEditor from "../../Editor";
-import Cursors from "../Cursors";
+import Cursors from "./Cursors";
 import { StyledEditorContainer } from "./styled";
 
 const RoomItem = (props, ref) => {
   const {
     id,
+    resizibleId,
+    setResizibleId,
     draggableId,
     setDraggableId,
     textEditorProps,
@@ -57,6 +59,8 @@ const RoomItem = (props, ref) => {
   return (
     <DragContainer
       id={id}
+      resizibleId={resizibleId}
+      setResizibleId={setResizibleId}
       position={editorPosition}
       draggableId={draggableId}
       setDraggableId={setDraggableId}
