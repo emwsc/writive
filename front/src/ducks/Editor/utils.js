@@ -51,6 +51,7 @@ export function useOnTextEditorRemoteChanges(
         onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange);
       else onExistingBlock(textEditorChanges, editorState, onEditorChange);
     } catch (e) {
+      console.log(e);
       setHasSyncErrors(true);
     }
   }, getEffectKeys(textEditorChanges));
@@ -135,6 +136,7 @@ function onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange) {
  * @param {function} onEditorChange
  */
 function onExistingBlock(textEditorChanges, editorState, onEditorChange) {
+  debugger;
   switch (textEditorChanges.command) {
     case COMMANDS.INSERT_TEXT: {
       const contentState = editorState.getCurrentContent();

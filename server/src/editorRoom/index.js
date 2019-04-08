@@ -87,6 +87,15 @@ function handleRoom(io, socket) {
       );
       socket.broadcast.to(room).emit("recieveTextEditorChanges", editorChanges);
     });
+
+     socket.on("emitNewRoomItem", function(data) {
+      console.log(
+        `${new Date().toLocaleString()} emitNewRoomItem ${
+          data
+        }`
+      );
+      socket.broadcast.to(room).emit("emitNewRoomItem", data);
+    });
   });
 }
 

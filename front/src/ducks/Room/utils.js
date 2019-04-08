@@ -59,15 +59,36 @@ export function getConnections(roomhash) {
   );
 }
 
-
-
-export function setEventHandlers({
-  setTextEditorChanges,
-  connections,
-  setCursor,
-  checkConnections,
-  emitCurrentEditorState,
-  setInitialRawContent
-}) {}
-
-export function onRecieveTextEditorChanges() {}
+/**
+ *
+ * @param {object} e
+ * @param {string} draggableId
+ * @param {object} prevPosition
+ * @param {object} editorPosition
+ */
+export function calculateNewPositionOfRoomItemOnDrag(
+  e,
+  draggableId,
+  prevPosition,
+  editorPosition
+) {
+  const handlerBounding = document
+    .getElementById(draggableId)
+    .getBoundingClientRect();
+  const topElement = document.getElementById("top");
+  const { height: topY } = topElement.getBoundingClientRect();
+  if (!prevPosition[draggableId]) prevPosition[draggableId] = {};
+  if (!prevPosition[draggableId].x)
+    prevPosition[draggableId].x = e.pageX - handlerBounding.x;
+  if (!prevPosition[draggableId].y)
+    prevPosition[draggableId].y = e.pageY - handlerBounding.y;
+  const diffX = e.pageX - handlerBounding.x - prevPosition[draggableId].x;
+  const diffY =
+    e.pageY - handlerBounding.y - prevPosition[draggableId].y - topY + 75;
+  const newPosition = { ...editorPosition };
+  newPosition[draggableId] = {
+    x: handlerBounding.x + diffX,
+    y: handlerBounding.y + diffY
+  };
+  return newPosition;
+}

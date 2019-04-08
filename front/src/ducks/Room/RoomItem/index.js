@@ -1,6 +1,12 @@
-import React, { forwardRef, useRef, useImperativeHandle } from "react";
+import React, {
+  forwardRef,
+  useRef,
+  useImperativeHandle,
+  useState
+} from "react";
 import DragContainer from "../../DragContainer";
 import TextEditor from "../../Editor";
+import Cursors from "../Cursors";
 import { StyledEditorContainer } from "./styled";
 
 const RoomItem = (props, ref) => {
@@ -12,12 +18,17 @@ const RoomItem = (props, ref) => {
     emitTextEditorChanges,
     latestTextEditorChanges,
     initialRawContent,
-    editorPosition
+    editorPosition,
+    connections,
+    socketId
   } = props;
 
   const editorRef = useRef(null);
 
+  const [positions, setPositions] = useState({});
+
   useImperativeHandle(ref, () => {
+    debugger;
     if (!ref.current) ref.current = {};
     if (!ref.current[id]) ref.current[id] = {};
     ref.current[id].editorState = editorRef.current;
@@ -35,6 +46,15 @@ const RoomItem = (props, ref) => {
     emitTextEditorChanges: roomEmitTextEditorChanges
   };
 
+  const cursorsProps = {
+    textEditorChanges: latestTextEditorChanges,
+    connections,
+    currentSocketId: socketId,
+    positions,
+    setPositions,
+    roomId: id
+  };
+
   return (
     <DragContainer
       id={id}
@@ -43,7 +63,8 @@ const RoomItem = (props, ref) => {
       setDraggableId={setDraggableId}
     >
       {/* <StyledEditorContainer id="editor"> */}
-      <StyledEditorContainer>
+      <StyledEditorContainer id={"editor-" + id}>
+        <Cursors {...cursorsProps} />
         <TextEditor
           ref={editorRef}
           {...roomitemTextEditorProps}

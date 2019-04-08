@@ -4,6 +4,7 @@ import COMMANDS from "../../../common/commands";
 
 const Cursors = React.memo(
   ({
+    roomId,
     currentSocketId,
     connections,
     textEditorChanges,
@@ -38,6 +39,7 @@ const Cursors = React.memo(
         cursors.push(
           <Cursor
             key={id}
+            roomId={roomId}
             width={width}
             blockKey={blockKey}
             offset={offset}

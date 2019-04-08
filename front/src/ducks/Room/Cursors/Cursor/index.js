@@ -4,6 +4,7 @@ import { getTextWidth } from "./utils";
 import COMMANDS from "../../../../common/commands";
 
 const Cursor = ({
+  roomId,
   client,
   blockKey,
   offset,
@@ -16,8 +17,8 @@ const Cursor = ({
     `[data-offset-key='${blockKey}-0-0']`
   );
   if (!textContainerElement || !client) return null;
-
-  const editorElement = document.getElementById("editor");
+  debugger;
+  const editorElement = document.getElementById("editor-" + roomId);
   const editorPosition = editorElement.getBoundingClientRect();
 
   const position = textContainerElement.getBoundingClientRect();
@@ -28,14 +29,14 @@ const Cursor = ({
 
   let left =
     client.socketId === socketId
-      ? textWidth + position.left + additionalOffset
+      ? textWidth + additionalOffset
       : positions[client.socketId]
       ? positions[client.socketId].left
       : null;
 
   let top =
     client.socketId === socketId
-      ? position.top
+      ? position.top - editorPosition.top
       : positions[client.socketId]
       ? positions[client.socketId].top
       : null;

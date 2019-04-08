@@ -5,10 +5,15 @@ import {
   StyledRoomTitle,
   StyledRoomErrors
 } from "./styled";
-import { useOnRoomLoad, getConnections } from "./utils";
+import {
+  useOnRoomLoad,
+  getConnections,
+  calculateNewPositionOfRoomItemOnDrag
+} from "./utils";
 import ConnectedUsers from "./ConnectedUsers";
 import SyncErrors from "./SyncErrors";
 import RoomItem from "./RoomItem";
+import { EditorState, convertToRaw } from "draft-js";
 
 const prevPosition = {};
 
@@ -25,7 +30,6 @@ const Room = props => {
   const [connections, setConnections] = useState({
     count: 0
   });
-  const [positions, setPositions] = useState({});
   const [draggableId, setDraggableId] = useState(false);
   const [editorPosition, setEditorPosition] = useState({});
   const [roomItems, setRoomItems] = useState([]);
@@ -75,14 +79,9 @@ const Room = props => {
     setHasSyncErrors
   };
 
-  const cursorsProps = {
-    currentSocketId: socket ? socket.id : null,
-    connections,
-    textEditorChanges: latestTextEditorChanges,
-    positions,
-    setPositions
-  };
-
+  /**
+   * Event handlers for sockets
+   */
   const events = [
     {
       eventName: "recieveTextEditorChanges",
@@ -103,7 +102,6 @@ const Room = props => {
       eventName: "setCurrentEditorState",
       handler: data => {
         if (data) {
-          debugger;
           const { state } = data;
           const ids = Object.keys(state);
           const roomItems = ids.map(id => ({
@@ -114,6 +112,15 @@ const Room = props => {
           setRoomItems(roomItems);
         }
       }
+    },
+    {
+      eventName: "emitNewRoomItem",
+      handler: ({ id, initialRawContent }) => {
+        if (!id) return;
+        const updatedRoomItems = [...roomItems];
+        updatedRoomItems.push({ id, initialRawContent });
+        setRoomItems(updatedRoomItems);
+      }
     }
   ];
 
@@ -122,27 +129,14 @@ const Room = props => {
   useOnRoomLoad(match.params.roomhash, setSocket, events);
 
   const onMouseMove = e => {
-    if (draggableId) {
-      const handlerBounding = document
-        .getElementById(draggableId)
-        .getBoundingClientRect();
-      const top = document.getElementById("top");
-      const { height: topY } = top.getBoundingClientRect();
-      if (!prevPosition[draggableId]) prevPosition[draggableId] = {};
-      if (!prevPosition[draggableId].x)
-        prevPosition[draggableId].x = e.pageX - handlerBounding.x;
-      if (!prevPosition[draggableId].y)
-        prevPosition[draggableId].y = e.pageY - handlerBounding.y;
-      const diffX = e.pageX - handlerBounding.x - prevPosition[draggableId].x;
-      const diffY =
-        e.pageY - handlerBounding.y - prevPosition[draggableId].y - topY + 50;
-      const p = { ...editorPosition };
-      p[draggableId] = {
-        x: handlerBounding.x + diffX,
-        y: handlerBounding.y + diffY
-      };
-      setEditorPosition(p);
-    }
+    if (!draggableId) return;
+    const newPosition = calculateNewPositionOfRoomItemOnDrag(
+      e,
+      draggableId,
+      prevPosition,
+      editorPosition
+    );
+    setEditorPosition(newPosition);
   };
 
   return (
@@ -163,15 +157,24 @@ const Room = props => {
         </div>
         <button
           onClick={() => {
-            const arr = [...roomItems];
-            arr.push({ id: "item-" + Math.random().toString(36) });
-            setRoomItems(arr);
+            const updatedRoomItems = [...roomItems];
+            const id = "item-" + Math.random().toString(36);
+            const initialRawContent = {
+              rawContent: convertToRaw(
+                EditorState.createEmpty().getCurrentContent()
+              )
+            };
+            updatedRoomItems.push({ id, initialRawContent });
+            setRoomItems(updatedRoomItems);
+            socket.emit("emitNewRoomItem", {
+              id,
+              initialRawContent
+            });
           }}
         >
-          add item
+          Add room item
         </button>
       </StyledTop>
-      {/* <Cursors {...cursorsProps} /> */}
       {roomItems.map(item => {
         const changes =
           item.id === latestTextEditorChanges.roomItemId
@@ -192,6 +195,8 @@ const Room = props => {
             latestTextEditorChanges={changes}
             initialRawContent={item.initialRawContent}
             editorPosition={position}
+            connections={connections}
+            socketId={socket ? socket.id : null}
           />
         );
       })}
