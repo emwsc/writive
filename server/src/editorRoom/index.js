@@ -96,6 +96,15 @@ function handleRoom(io, socket) {
       );
       socket.broadcast.to(room).emit("emitNewRoomItem", data);
     });
+
+    socket.on("moveDraggable", function(data) {
+      console.log(
+        `${new Date().toLocaleString()} moveDraggable ${
+          data
+        }`
+      );
+      socket.broadcast.to(room).emit("moveDraggable", data);
+    });
   });
 }
 

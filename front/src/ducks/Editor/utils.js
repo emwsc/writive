@@ -37,7 +37,6 @@ export function useOnTextEditorRemoteChanges(
   setHasSyncErrors
 ) {
   useEffect(() => {
-    console.log(textEditorChanges);
     const noChanges =
       !editorState ||
       !textEditorChanges.anchorKey ||

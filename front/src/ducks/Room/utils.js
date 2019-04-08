@@ -92,3 +92,66 @@ export function calculateNewPositionOfRoomItemOnDrag(
   };
   return newPosition;
 }
+
+/**
+ * Event handlers for sockets
+ */
+export function getEventHandlers({
+  setTextEditorChanges,
+  checkConnections,
+  emitCurrentEditorState,
+  setRoomItems,
+  roomItems,
+  setDraggableId,
+  setEditorPosition
+}) {
+  const events = [
+    {
+      eventName: "recieveTextEditorChanges",
+      handler: (changes, socket) => {
+        if (socket.id === changes.socketId) return;
+        setTextEditorChanges(changes);
+      }
+    },
+    {
+      eventName: "connectionsCountChanges",
+      handler: socket => checkConnections(socket)
+    },
+    {
+      eventName: "getCurrentEditorState",
+      handler: emitCurrentEditorState
+    },
+    {
+      eventName: "setCurrentEditorState",
+      handler: data => {
+        if (data) {
+          const { state } = data;
+          const ids = Object.keys(state);
+          const roomItems = ids.map(id => ({
+            id,
+            initialRawContent: state[id].editorState,
+            editorPosition: state[id].editorPosition
+          }));
+          setRoomItems(roomItems);
+        }
+      }
+    },
+    {
+      eventName: "emitNewRoomItem",
+      handler: ({ id, initialRawContent }) => {
+        if (!id) return;
+        const updatedRoomItems = roomItems;
+        updatedRoomItems.push({ id, initialRawContent });
+        setRoomItems([...updatedRoomItems]);
+      }
+    },
+    {
+      eventName: "moveDraggable",
+      handler: ({ draggableId, newPosition }) => {
+        setDraggableId(draggableId);
+        if (newPosition) setEditorPosition(newPosition);
+      }
+    }
+  ];
+  return events;
+}

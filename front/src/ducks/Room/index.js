@@ -8,7 +8,8 @@ import {
 import {
   useOnRoomLoad,
   getConnections,
-  calculateNewPositionOfRoomItemOnDrag
+  calculateNewPositionOfRoomItemOnDrag,
+  getEventHandlers
 } from "./utils";
 import ConnectedUsers from "./ConnectedUsers";
 import SyncErrors from "./SyncErrors";
@@ -79,54 +80,19 @@ const Room = props => {
     setHasSyncErrors
   };
 
-  /**
-   * Event handlers for sockets
-   */
-  const events = [
-    {
-      eventName: "recieveTextEditorChanges",
-      handler: (changes, socket) => {
-        if (socket.id === changes.socketId) return;
-        setTextEditorChanges(changes);
-      }
-    },
-    {
-      eventName: "connectionsCountChanges",
-      handler: socket => checkConnections(socket)
-    },
-    {
-      eventName: "getCurrentEditorState",
-      handler: emitCurrentEditorState
-    },
-    {
-      eventName: "setCurrentEditorState",
-      handler: data => {
-        if (data) {
-          const { state } = data;
-          const ids = Object.keys(state);
-          const roomItems = ids.map(id => ({
-            id,
-            initialRawContent: state[id].editorState,
-            editorPosition: state[id].editorPosition
-          }));
-          setRoomItems(roomItems);
-        }
-      }
-    },
-    {
-      eventName: "emitNewRoomItem",
-      handler: ({ id, initialRawContent }) => {
-        if (!id) return;
-        const updatedRoomItems = [...roomItems];
-        updatedRoomItems.push({ id, initialRawContent });
-        setRoomItems(updatedRoomItems);
-      }
-    }
-  ];
+  const eventHandlers = getEventHandlers({
+    setTextEditorChanges,
+    checkConnections,
+    emitCurrentEditorState,
+    setRoomItems,
+    roomItems,
+    setDraggableId,
+    setEditorPosition
+  });
 
   const roomName = match.params.roomhash.split("-").join(" ");
 
-  useOnRoomLoad(match.params.roomhash, setSocket, events);
+  useOnRoomLoad(match.params.roomhash, setSocket, eventHandlers);
 
   const onMouseMove = e => {
     if (!draggableId) return;
@@ -136,6 +102,7 @@ const Room = props => {
       prevPosition,
       editorPosition
     );
+    socket.emit("moveDraggable", { draggableId, newPosition });
     setEditorPosition(newPosition);
   };
 
@@ -145,6 +112,9 @@ const Room = props => {
       onMouseUp={() => {
         if (draggableId) {
           setDraggableId(null);
+          socket.emit("moveDraggable", {
+            draggableId: null
+          });
           prevPosition[draggableId].x = null;
           prevPosition[draggableId].y = null;
         }
