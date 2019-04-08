@@ -28,7 +28,6 @@ const RoomItem = (props, ref) => {
   const [positions, setPositions] = useState({});
 
   useImperativeHandle(ref, () => {
-    debugger;
     if (!ref.current) ref.current = {};
     if (!ref.current[id]) ref.current[id] = {};
     ref.current[id].editorState = editorRef.current;

@@ -136,7 +136,6 @@ function onNewBlock(textEditorChanges, blockMap, editorState, onEditorChange) {
  * @param {function} onEditorChange
  */
 function onExistingBlock(textEditorChanges, editorState, onEditorChange) {
-  debugger;
   switch (textEditorChanges.command) {
     case COMMANDS.INSERT_TEXT: {
       const contentState = editorState.getCurrentContent();
@@ -264,7 +263,6 @@ export function gatherEditorChangesOnInput(editorState) {
 export function useEditorInitialState(initialRawContent, dispatch) {
   useEffect(() => {
     if (initialRawContent) {
-      debugger;
       dispatch({
         type: TYPES.ON_CHANGE,
         payload: {

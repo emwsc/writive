@@ -17,7 +17,6 @@ const Cursor = ({
     `[data-offset-key='${blockKey}-0-0']`
   );
   if (!textContainerElement || !client) return null;
-  debugger;
   const editorElement = document.getElementById("editor-" + roomId);
   const editorPosition = editorElement.getBoundingClientRect();
 
