@@ -19,7 +19,9 @@ const RoomItem = (props, ref) => {
 
   useImperativeHandle(ref, () => {
     if (!ref.current) ref.current = {};
-    ref.current[id] = editorRef.current;
+    if (!ref.current[id]) ref.current[id] = {};
+    ref.current[id].editorState = editorRef.current;
+    ref.current[id].editorPosition = editorPosition;
     return {
       ...ref.current
     };
@@ -32,7 +34,6 @@ const RoomItem = (props, ref) => {
     ...textEditorProps,
     emitTextEditorChanges: roomEmitTextEditorChanges
   };
-  console.log(latestTextEditorChanges);
 
   return (
     <DragContainer

@@ -1,17 +1,13 @@
 import React, { useState, useRef } from "react";
 import {
   StyledRoom,
-  StyledEditorContainer,
   StyledTop,
   StyledRoomTitle,
   StyledRoomErrors
 } from "./styled";
 import { useOnRoomLoad, getConnections } from "./utils";
-import TextEditor from "../Editor";
 import ConnectedUsers from "./ConnectedUsers";
-import Cursors from "./Cursors";
 import SyncErrors from "./SyncErrors";
-import DragContainer from "../DragContainer";
 import RoomItem from "./RoomItem";
 
 const prevPosition = {};
@@ -19,26 +15,20 @@ const prevPosition = {};
 const Room = props => {
   const { match } = props;
 
-  const editorRef = useRef(null);
-  //const handlerRef = useRef();
+  const roomRef = useRef(null);
+  const connectionsRef = useRef(connections);
 
   const [hasSyncErrors, setHasSyncErrors] = useState(false);
   const [socket, setSocket] = useState();
-  const [initialRawContent, setInitialRawContent] = useState({});
   const [latestTextEditorChanges, setTextEditorChanges] = useState({});
   const [userColor, setUserColor] = useState(null);
   const [connections, setConnections] = useState({
     count: 0
   });
-
   const [positions, setPositions] = useState({});
-
   const [draggableId, setDraggableId] = useState(false);
   const [editorPosition, setEditorPosition] = useState({});
-
   const [roomItems, setRoomItems] = useState([]);
-
-  const connectionsRef = useRef(connections);
 
   /**
    * Check current connections to room
@@ -55,19 +45,28 @@ const Room = props => {
     });
   }
 
-  const emitTextEditorChanges = textEditorChanges => {
+  /**
+   * Emit changes to other clients
+   * @param {object} textEditorChanges
+   */
+  function emitTextEditorChanges(textEditorChanges) {
     if (!socket || !textEditorChanges.command) return;
     socket.emit("emitTextEditorChanges", {
       ...textEditorChanges,
       socketId: socket.id
     });
-  };
+  }
 
+  /**
+   * Emit full room state to new client
+   * @param {string} socketId
+   * @param {object} socket
+   */
   function emitCurrentEditorState(socketId, socket) {
-    if (!socket || !editorRef || !editorRef.current) return;
+    if (!socket || !roomRef || !roomRef.current) return;
     socket.emit("sendCurrentEditorState", {
       to: socketId,
-      editorJson: JSON.stringify(editorRef.current)
+      state: roomRef.current
     });
   }
 
@@ -104,11 +103,15 @@ const Room = props => {
       eventName: "setCurrentEditorState",
       handler: data => {
         if (data) {
-          const parsed = JSON.parse(data);
-          const ids = Object.keys(parsed);
-          const roomItems = ids.map(id => ({ id }));
+          debugger;
+          const { state } = data;
+          const ids = Object.keys(state);
+          const roomItems = ids.map(id => ({
+            id,
+            initialRawContent: state[id].editorState,
+            editorPosition: state[id].editorPosition
+          }));
           setRoomItems(roomItems);
-          setInitialRawContent(parsed);
         }
       }
     }
@@ -169,40 +172,29 @@ const Room = props => {
         </button>
       </StyledTop>
       {/* <Cursors {...cursorsProps} /> */}
-      {/* <DragContainer
-        ref={handlerRef}
-        position={editorPosition}
-        draggableId={draggableId}
-        setDraggableId={setDraggableId}
-      >
-        <StyledEditorContainer id="editor">
-          <TextEditor ref={editorRef} {...textEditorProps} />
-        </StyledEditorContainer>
-      </DragContainer> */}
-      {/* <RoomItem
-        ref={editorRef}
-        draggableId={draggableId}
-        setDraggableId={setDraggableId}
-        textEditorProps={textEditorProps}
-      /> */}
-      {roomItems.map(item => (
-        <RoomItem
-          key={item.id}
-          id={item.id}
-          ref={editorRef}
-          draggableId={draggableId}
-          setDraggableId={setDraggableId}
-          textEditorProps={textEditorProps}
-          emitTextEditorChanges={emitTextEditorChanges}
-          latestTextEditorChanges={
-            item.id === latestTextEditorChanges.roomItemId
-              ? latestTextEditorChanges
-              : {}
-          }
-          initialRawContent={initialRawContent[item.id]}
-          editorPosition={editorPosition[item.id]}
-        />
-      ))}
+      {roomItems.map(item => {
+        const changes =
+          item.id === latestTextEditorChanges.roomItemId
+            ? latestTextEditorChanges
+            : {};
+        const position = editorPosition[item.id]
+          ? editorPosition[item.id]
+          : item.editorPosition;
+        return (
+          <RoomItem
+            key={item.id}
+            id={item.id}
+            ref={roomRef}
+            draggableId={draggableId}
+            setDraggableId={setDraggableId}
+            textEditorProps={textEditorProps}
+            emitTextEditorChanges={emitTextEditorChanges}
+            latestTextEditorChanges={changes}
+            initialRawContent={item.initialRawContent}
+            editorPosition={position}
+          />
+        );
+      })}
       {hasSyncErrors && (
         <StyledRoomErrors>
           <SyncErrors />

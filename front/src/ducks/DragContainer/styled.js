@@ -5,12 +5,8 @@ export const StyledDragContainer = styled.div`
   left: ${({ position }) =>
     position && position.x ? position.x + "px" : null};
   top: ${({ position }) => (position && position.y ? position.y + "px" : null)};
-  /* width: 800px;
-  height: 900px; */
-
   min-width: 200px;
   min-height: 200px;
-
   &:hover > div:first-child {
     display: block;
   }
@@ -46,4 +42,5 @@ export const StyledOverflowContainer = styled.div`
   position: relative;
   min-width: 200px;
   min-height: 200px;
+  padding: 5px;
 `;

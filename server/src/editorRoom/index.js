@@ -69,7 +69,7 @@ function handleRoom(io, socket) {
       console.log(`${new Date().toLocaleString()} sendCurrentEditorState`);
       socket.broadcast
         .to(data.to)
-        .emit("setCurrentEditorState", data.editorJson);
+        .emit("setCurrentEditorState", data);
     });
 
     io.in(room).clients((err, clients) => {
