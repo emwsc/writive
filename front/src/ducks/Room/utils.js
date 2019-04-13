@@ -103,7 +103,8 @@ export function getEventHandlers({
   setRoomItems,
   roomItems,
   setDraggableId,
-  setEditorPosition
+  setEditorPosition,
+  setResizibleId
 }) {
   const events = [
     {
@@ -147,7 +148,8 @@ export function getEventHandlers({
     },
     {
       eventName: "moveDraggable",
-      handler: ({ draggableId, newPosition }) => {
+      handler: ({ draggableId, resizibleId, newPosition }) => {
+        setResizibleId(resizibleId);
         setDraggableId(draggableId);
         if (newPosition) setEditorPosition(newPosition);
       }

@@ -1,28 +1,52 @@
 import styled from "styled-components";
 
-export const StyledDragContainer = styled.div`
+export const StyledDragContainer = styled.div.attrs(
+  ({ position, showBorder }) => ({
+    style: {
+      left: position && position.x ? position.x + "px" : null,
+      top: position && position.y ? position.y + "px" : null,
+      border: showBorder ? " 1px solid lightgray" : "none"
+    }
+  })
+)`
   position: absolute;
-  left: ${({ position }) =>
+  /* left: ${({ position }) =>
     position && position.x ? position.x + "px" : null};
-  top: ${({ position }) => (position && position.y ? position.y + "px" : null)};
+  top: ${({ position }) =>
+    position && position.y ? position.y + "px" : null}; */
   min-width: 200px;
   min-height: 200px;
-  border: ${props => (props.showBorder ? " 1px solid lightgray" : "none")};
+  /* border: ${props =>
+    props.showBorder ? " 1px solid lightgray" : "none"}; */
   &:hover > div:first-child {
-    display: block;
+    display: block!important;
   }
   &:hover > div:nth-child(2) {
-    resize: both;
-    overflow: auto;
+    resize: both!important;
+    overflow: auto!important;
   }
   &:hover {
-    border: 1px solid lightgray;
-    border-top: none;
+    border: 1px solid lightgray!important;
+    border-top: none!important;
   }
 `;
 
-export const StyledHandler = styled.div`
-  display: ${props => (props.showHandler ? "block" : "none")};
+/*
+.attrs({
+  style: props => ({
+    display: props.showHandler ? "block" : "none"
+  })
+})
+*/
+
+export const StyledHandler = styled.div.attrs(({ showHandler }) => {
+  return {
+    style: {
+      display: showHandler ? "block" : "none"
+    }
+  };
+})`
+  /* display: ${props => (props.showHandler ? "block" : "none")}; */
   position: absolute;
   background: #e0e0e0;
   height: 15px;
@@ -41,11 +65,22 @@ export const StyledHandler = styled.div`
   }
 `;
 
-export const StyledOverflowContainer = styled.div`
-  resize: ${props => (props.showResizible ? "both" : "none")};
-  overflow: ${props => (props.showResizible ? "auto" : "unset")};
+export const StyledOverflowContainer = styled.div.attrs(
+  ({ width, height, showResizible }) => ({
+    style: {
+      width: width + "px",
+      height: height + "px",
+      resize: showResizible ? "both" : "none",
+      overflow: showResizible ? "auto" : "unset"
+    }
+  })
+)`
+  /* resize: ${props => (props.showResizible ? "both" : "none")};
+  overflow: ${props => (props.showResizible ? "auto" : "unset")}; */
   position: relative;
   min-width: 200px;
   min-height: 200px;
   padding: 5px;
+  /* width: ${props => props.width + "px"};
+  height: ${props => props.height + "px"}; */
 `;

@@ -5,9 +5,9 @@ export const StyledCursor = styled.div`
   position: absolute;
   width: 2px;
   height: 20px;
-  left: ${props => props.left + "px"};
-  top: ${props => props.top + "px"};
-  &::after {
+  left: ${props => (props.left ? props.left + "px" : null)};
+  top: ${props => (props.top ? props.top + "px" : null)};
+  &:after {
     content: '${props => props.name}';
     position: absolute;
     font-size: 10px;

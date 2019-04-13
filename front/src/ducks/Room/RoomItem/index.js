@@ -33,7 +33,9 @@ const RoomItem = (props, ref) => {
     if (!ref.current) ref.current = {};
     if (!ref.current[id]) ref.current[id] = {};
     ref.current[id].editorState = editorRef.current;
-    ref.current[id].editorPosition = editorPosition;
+    ref.current[id].editorPosition = {
+      ...editorPosition
+    };
     return {
       ...ref.current
     };
@@ -55,7 +57,6 @@ const RoomItem = (props, ref) => {
     setPositions,
     roomId: id
   };
-
   return (
     <DragContainer
       id={id}

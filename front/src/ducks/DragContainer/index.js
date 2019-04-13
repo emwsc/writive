@@ -9,12 +9,13 @@ import ReactResizeDetector from "react-resize-detector";
 const DragContainer = ({
   id,
   children,
-  position,
+  position = {},
   draggableId,
   resizibleId,
   setResizibleId,
   setDraggableId
 }) => {
+  const { width, height } = position;
   return (
     <StyledDragContainer position={position} showBorder={resizibleId === id}>
       <StyledHandler
@@ -27,6 +28,8 @@ const DragContainer = ({
       <StyledOverflowContainer
         showResizible={resizibleId === id}
         id={"resize-" + id}
+        width={width}
+        height={height}
       >
         {children}
         <ReactResizeDetector

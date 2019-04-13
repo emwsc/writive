@@ -4,7 +4,8 @@ import {
   StyledTop,
   StyledRoomTitle,
   StyledRoomErrors,
-  StyledRoomItems
+  StyledRoomItems,
+  StyledAddTextBlockBtn
 } from "./styled";
 import {
   useOnRoomLoad,
@@ -89,7 +90,8 @@ const Room = props => {
     setRoomItems,
     roomItems,
     setDraggableId,
-    setEditorPosition
+    setEditorPosition,
+    setResizibleId
   });
 
   const roomName = match.params.roomhash.split("-").join(" ");
@@ -98,12 +100,22 @@ const Room = props => {
 
   const onMouseMove = e => {
     if (!draggableId) return;
-    const newPosition = calculateNewPositionOfRoomItemOnDrag(
-      e,
-      draggableId,
-      prevPosition,
-      editorPosition
-    );
+    const newPosition = {
+      ...calculateNewPositionOfRoomItemOnDrag(
+        e,
+        draggableId,
+        prevPosition,
+        editorPosition
+      )
+    };
+    // const elementPosition = document
+    //   .getElementById("resize-" + draggableId)
+    //   .getBoundingClientRect();
+    newPosition[draggableId] = {
+      ...newPosition[draggableId],
+      width: document.getElementById("resize-" + draggableId).style.width,
+      height: document.getElementById("resize-" + draggableId).style.height
+    };
     socket.emit("moveDraggable", { draggableId, newPosition });
     setEditorPosition(newPosition);
   };
@@ -120,7 +132,23 @@ const Room = props => {
           prevPosition[draggableId].x = null;
           prevPosition[draggableId].y = null;
         }
-        if (resizibleId) setResizibleId(null);
+        if (resizibleId) {
+          const elementPosition = document
+            .getElementById("resize-" + resizibleId)
+            .getBoundingClientRect();
+
+          editorPosition[resizibleId] = {
+            ...editorPosition[resizibleId],
+            width: elementPosition.width,
+            height: elementPosition.height
+          };
+          socket.emit("moveDraggable", {
+            resizibleId,
+            newPosition: { ...editorPosition }
+          });
+
+          setResizibleId(null);
+        }
       }}
     >
       <StyledTop id="top">
@@ -128,7 +156,7 @@ const Room = props => {
           <StyledRoomTitle>{roomName}</StyledRoomTitle>
           <ConnectedUsers connections={connections} />
         </div>
-        <button
+        <StyledAddTextBlockBtn
           onClick={() => {
             const updatedRoomItems = [...roomItems];
             const id = "item-" + Math.random().toString(36);
@@ -145,8 +173,8 @@ const Room = props => {
             });
           }}
         >
-          Add room item
-        </button>
+          Add text block
+        </StyledAddTextBlockBtn>
       </StyledTop>
       <StyledRoomItems>
         {roomItems.map(item => {
@@ -154,9 +182,11 @@ const Room = props => {
             item.id === latestTextEditorChanges.roomItemId
               ? latestTextEditorChanges
               : {};
+
           const position = editorPosition[item.id]
             ? editorPosition[item.id]
             : item.editorPosition;
+
           return (
             <RoomItem
               key={item.id}

@@ -70,6 +70,7 @@ const Cursor = ({
   left = left;
   top = top;
 
+  if (!top && !left) return null;
   return (
     <StyledCursor left={left} top={top} color={color} name={client.name} />
   );
