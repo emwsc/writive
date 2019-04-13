@@ -112,9 +112,9 @@ const Room = props => {
     //   .getElementById("resize-" + draggableId)
     //   .getBoundingClientRect();
     newPosition[draggableId] = {
-      ...newPosition[draggableId],
-      width: document.getElementById("resize-" + draggableId).style.width,
-      height: document.getElementById("resize-" + draggableId).style.height
+      ...newPosition[draggableId]
+      // width: document.getElementById("resize-" + draggableId).style.width,
+      // height: document.getElementById("resize-" + draggableId).style.height
     };
     socket.emit("moveDraggable", { draggableId, newPosition });
     setEditorPosition(newPosition);
@@ -203,6 +203,12 @@ const Room = props => {
               editorPosition={position}
               connections={connections}
               socketId={socket ? socket.id : null}
+              setSize={(id, width, height) => {
+                setEditorPosition({
+                  ...editorPosition,
+                  id: { ...editorPosition[id], width, height }
+                });
+              }}
             />
           );
         })}

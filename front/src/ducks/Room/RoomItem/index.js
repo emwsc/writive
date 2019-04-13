@@ -22,7 +22,8 @@ const RoomItem = (props, ref) => {
     initialRawContent,
     editorPosition,
     connections,
-    socketId
+    socketId,
+    setSize
   } = props;
 
   const editorRef = useRef(null);
@@ -65,6 +66,7 @@ const RoomItem = (props, ref) => {
       position={editorPosition}
       draggableId={draggableId}
       setDraggableId={setDraggableId}
+      setSize={setSize}
     >
       {/* <StyledEditorContainer id="editor"> */}
       <StyledEditorContainer id={"editor-" + id}>

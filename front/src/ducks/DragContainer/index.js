@@ -13,20 +13,21 @@ const DragContainer = ({
   draggableId,
   resizibleId,
   setResizibleId,
-  setDraggableId
+  setDraggableId,
+  setSize
 }) => {
   const { width, height } = position;
   return (
     <StyledDragContainer position={position} showBorder={resizibleId === id}>
       <StyledHandler
         id={id}
-        showHandler={draggableId === id}
+        showHandler={draggableId && draggableId === id}
         onMouseDown={() => {
           if (!draggableId || draggableId !== id) setDraggableId(id);
         }}
       />
       <StyledOverflowContainer
-        showResizible={resizibleId === id}
+        showResizible={resizibleId && resizibleId === id}
         id={"resize-" + id}
         width={width}
         height={height}
@@ -35,8 +36,10 @@ const DragContainer = ({
         <ReactResizeDetector
           handleWidth
           handleHeight
-          onResize={width => {
-            if (width === 200) return;
+          onResize={(width, height) => {
+            if (width === 200) return; //minimal size
+            console.log(width, height)
+            setSize(id, width, height);
             if (!resizibleId || resizibleId !== id) setResizibleId(id);
           }}
         />
