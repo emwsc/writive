@@ -67,9 +67,6 @@ const Cursor = ({
     if (color) setPositions(updatedPositions);
   }, [socketId, blockKey, offset]);
 
-  left = left;
-  top = top;
-
   if (!top && !left) return null;
   return (
     <StyledCursor left={left} top={top} color={color} name={client.name} />

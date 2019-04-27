@@ -52,7 +52,6 @@ const Cursors = React.memo(
         );
       }
     }
-
     return <React.Fragment>{cursors}</React.Fragment>;
   },
   (prev, next) =>

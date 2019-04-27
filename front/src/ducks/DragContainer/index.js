@@ -38,7 +38,6 @@ const DragContainer = ({
           handleHeight
           onResize={(width, height) => {
             if (width === 200) return; //minimal size
-            console.log(width, height)
             setSize(id, width, height);
             if (!resizibleId || resizibleId !== id) setResizibleId(id);
           }}

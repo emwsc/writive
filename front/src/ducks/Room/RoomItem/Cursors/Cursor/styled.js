@@ -15,5 +15,11 @@ export const StyledCursor = styled.div`
     color: white;
     z-index: 100;
     background: ${props => props.color};
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 50px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
   }
 `;

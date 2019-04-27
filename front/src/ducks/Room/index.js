@@ -111,11 +111,12 @@ const Room = props => {
     // const elementPosition = document
     //   .getElementById("resize-" + draggableId)
     //   .getBoundingClientRect();
-    newPosition[draggableId] = {
-      ...newPosition[draggableId]
-      // width: document.getElementById("resize-" + draggableId).style.width,
-      // height: document.getElementById("resize-" + draggableId).style.height
-    };
+    // newPosition[draggableId] = {
+    //   ...newPosition[draggableId]
+    //   // width: document.getElementById("resize-" + draggableId).style.width,
+    //   // height: document.getElementById("resize-" + draggableId).style.height
+    // };
+    console.log(newPosition);
     socket.emit("moveDraggable", { draggableId, newPosition });
     setEditorPosition(newPosition);
   };

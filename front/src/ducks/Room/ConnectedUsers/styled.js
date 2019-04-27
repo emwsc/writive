@@ -6,6 +6,7 @@ export const StyledConnectedUsers = styled.div`
   margin-top: 10px;
   max-width: 200px;
   overflow: hidden;
+  position: relative;
   &:hover {
     overflow-x: overlay;
   }

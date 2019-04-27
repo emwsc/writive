@@ -68,7 +68,6 @@ const RoomItem = (props, ref) => {
       setDraggableId={setDraggableId}
       setSize={setSize}
     >
-      {/* <StyledEditorContainer id="editor"> */}
       <StyledEditorContainer id={"editor-" + id}>
         <Cursors {...cursorsProps} />
         <TextEditor

@@ -87,6 +87,7 @@ export function calculateNewPositionOfRoomItemOnDrag(
     e.pageY - handlerBounding.y - prevPosition[draggableId].y - topY;
   const newPosition = { ...editorPosition };
   newPosition[draggableId] = {
+    ...editorPosition[draggableId],
     x: handlerBounding.x + diffX,
     y: handlerBounding.y + diffY
   };
@@ -141,6 +142,7 @@ export function getEventHandlers({
       eventName: "emitNewRoomItem",
       handler: ({ id, initialRawContent }) => {
         if (!id) return;
+        debugger;
         const updatedRoomItems = roomItems;
         updatedRoomItems.push({ id, initialRawContent });
         setRoomItems([...updatedRoomItems]);

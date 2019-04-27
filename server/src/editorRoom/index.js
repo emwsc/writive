@@ -67,9 +67,7 @@ function handleRoom(io, socket) {
 
     socket.on("sendCurrentEditorState", function(data) {
       console.log(`${new Date().toLocaleString()} sendCurrentEditorState`);
-      socket.broadcast
-        .to(data.to)
-        .emit("setCurrentEditorState", data);
+      socket.broadcast.to(data.to).emit("setCurrentEditorState", data);
     });
 
     io.in(room).clients((err, clients) => {
@@ -88,21 +86,13 @@ function handleRoom(io, socket) {
       socket.broadcast.to(room).emit("recieveTextEditorChanges", editorChanges);
     });
 
-     socket.on("emitNewRoomItem", function(data) {
-      console.log(
-        `${new Date().toLocaleString()} emitNewRoomItem ${
-          data
-        }`
-      );
+    socket.on("emitNewRoomItem", function(data) {
+      console.log(`${new Date().toLocaleString()} emitNewRoomItem ${data}`);
       socket.broadcast.to(room).emit("emitNewRoomItem", data);
     });
 
     socket.on("moveDraggable", function(data) {
-      console.log(
-        `${new Date().toLocaleString()} moveDraggable ${
-          data
-        }`
-      );
+      console.log(`${new Date().toLocaleString()} moveDraggable ${data}`);
       socket.broadcast.to(room).emit("moveDraggable", data);
     });
   });
