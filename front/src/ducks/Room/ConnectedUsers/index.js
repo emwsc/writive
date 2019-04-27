@@ -6,10 +6,16 @@ const ConnectedUsers = React.memo(
   ({ connections }) => {
     const users = [];
     if (connections.clients) {
+      let index = 0;
       for (const socketId in connections.clients) {
         users.push(
-          <User key={socketId} client={connections.clients[socketId]} />
+          <User
+            key={socketId}
+            client={connections.clients[socketId]}
+            index={index}
+          />
         );
+        index++;
       }
     }
     return <StyledConnectedUsers>{users}</StyledConnectedUsers>;

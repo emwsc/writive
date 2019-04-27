@@ -38,8 +38,11 @@ const DragContainer = ({
           handleHeight
           onResize={(width, height) => {
             if (width === 200) return; //minimal size
+
             setSize(id, width, height);
-            if (!resizibleId || resizibleId !== id) setResizibleId(id);
+            if (!resizibleId || resizibleId !== id) {
+              if (width !== position.width) setResizibleId(id);
+            }
           }}
         />
       </StyledOverflowContainer>

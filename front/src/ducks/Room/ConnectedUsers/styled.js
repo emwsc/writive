@@ -4,7 +4,7 @@ export const StyledConnectedUsers = styled.div`
   display: flex;
   flex-direction: row-reverse;
   margin-top: 10px;
-  max-width: 200px;
+  max-width: 250px;
   overflow: hidden;
   position: relative;
   &:hover {

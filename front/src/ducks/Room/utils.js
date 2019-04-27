@@ -159,3 +159,25 @@ export function getEventHandlers({
   ];
   return events;
 }
+
+export function mapRoomItemProps(
+  item,
+  editorPosition,
+  latestTextEditorChanges,
+  roomItemCommonProps
+) {
+  const changes =
+    item.id === latestTextEditorChanges.roomItemId
+      ? latestTextEditorChanges
+      : {};
+
+  const position = editorPosition[item.id]
+    ? editorPosition[item.id]
+    : item.editorPosition;
+  return {
+    ...roomItemCommonProps,
+    ...item,
+    latestTextEditorChanges: changes,
+    editorPosition: position
+  };
+}

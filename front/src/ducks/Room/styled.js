@@ -8,27 +8,6 @@ export const StyledRoom = styled.div`
   position: relative;
 `;
 
-export const StyledTop = styled.div`
-  display: flex;
-  align-items: center;
-  flex-direction: row-reverse;
-  position: relative;
-  z-index: 500;
-  @media (max-width: 1300px) {
-    margin-bottom: 10px;
-    height: auto;
-    min-height: 30px;
-    align-items: center;
-    justify-content: center;
-  }
-`;
-
-export const StyledRoomTitle = styled.div`
-  font-size: 12px;
-  font-weight: bold;
-  color: dimgray;
-`;
-
 export const StyledEditorContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
@@ -60,19 +39,4 @@ export const StyledRoomItems = styled.div`
   top: 70px;
 `;
 
-export const StyledAddTextBlockBtn = styled.button`
-  background: #8e2de2;
-  background: -webkit-linear-gradient(to left, #4a00e0, #8e2de2);
-  background: linear-gradient(to left, #4a00e0, #8e2de2);
-  height: 30px;
-  border: none;
-  color: white;
-  font-weight: bold;
-  padding: 5px 10px;
-  transform: skewX(-25deg);
-  font-size: 12px;
-  box-shadow: 5px 4px 9px 0px #03a9f4;
-  cursor: pointer;
-  border-radius: 4px;
-  margin-right: 20px;
-`;
+

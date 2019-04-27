@@ -7,6 +7,7 @@ export const StyledPockemon = styled.img`
   padding: 2px;
   border: ${props => "2px solid " + (props.color ? props.color : "lightgray")};
   margin: 0 5px;
+  background: white;
   position: relative;
-  left: -2%;
+  right: ${props => props.right + "px"};
 `;

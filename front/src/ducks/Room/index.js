@@ -1,30 +1,22 @@
 import React, { useState, useRef } from "react";
-import {
-  StyledRoom,
-  StyledTop,
-  StyledRoomTitle,
-  StyledRoomErrors,
-  StyledRoomItems,
-  StyledAddTextBlockBtn
-} from "./styled";
+import { StyledRoom, StyledRoomErrors, StyledRoomItems } from "./styled";
 import {
   useOnRoomLoad,
   getConnections,
   calculateNewPositionOfRoomItemOnDrag,
-  getEventHandlers
+  getEventHandlers,
+  mapRoomItemProps
 } from "./utils";
-import ConnectedUsers from "./ConnectedUsers";
+
 import SyncErrors from "./SyncErrors";
 import RoomItem from "./RoomItem";
-import { EditorState, convertToRaw } from "draft-js";
+
+import Header from "./Header";
 
 const prevPosition = {};
 
 const Room = props => {
   const { match } = props;
-
-  const roomRef = useRef(null);
-  const connectionsRef = useRef(connections);
 
   const [hasSyncErrors, setHasSyncErrors] = useState(false);
   const [socket, setSocket] = useState();
@@ -37,6 +29,9 @@ const Room = props => {
   const [resizibleId, setResizibleId] = useState(null);
   const [editorPosition, setEditorPosition] = useState({});
   const [roomItems, setRoomItems] = useState([]);
+
+  const roomRef = useRef(null);
+  const connectionsRef = useRef(connections);
 
   /**
    * Check current connections to room
@@ -78,11 +73,6 @@ const Room = props => {
     });
   }
 
-  const textEditorProps = {
-    userColor,
-    setHasSyncErrors
-  };
-
   const eventHandlers = getEventHandlers({
     setTextEditorChanges,
     checkConnections,
@@ -121,98 +111,81 @@ const Room = props => {
     setEditorPosition(newPosition);
   };
 
+  const onMouseUp = () => {
+    if (draggableId) {
+      setDraggableId(null);
+      socket.emit("moveDraggable", {
+        draggableId: null
+      });
+      prevPosition[draggableId].x = null;
+      prevPosition[draggableId].y = null;
+    }
+    if (resizibleId) {
+      const elementPosition = document
+        .getElementById("resize-" + resizibleId)
+        .getBoundingClientRect();
+
+      editorPosition[resizibleId] = {
+        ...editorPosition[resizibleId],
+        width: elementPosition.width,
+        height: elementPosition.height
+      };
+      socket.emit("moveDraggable", {
+        resizibleId,
+        newPosition: { ...editorPosition }
+      });
+      setResizibleId(null);
+    }
+  };
+
+  const setSize = (id, width, height) => {
+    setEditorPosition({
+      ...editorPosition,
+      id: { ...editorPosition[id], width, height }
+    });
+  };
+
+  const textEditorProps = {
+    userColor,
+    setHasSyncErrors
+  };
+
+  const headerProps = {
+    connections,
+    roomName,
+    roomItems,
+    socket,
+    setRoomItems
+  };
+
+  const roomItemCommonProps = {
+    resizibleId,
+    setResizibleId,
+    draggableId,
+    setDraggableId,
+    textEditorProps,
+    emitTextEditorChanges,
+    connections,
+    socketId: socket ? socket.id : null,
+    setSize
+  };
+
   return (
-    <StyledRoom
-      onMouseMove={onMouseMove}
-      onMouseUp={() => {
-        if (draggableId) {
-          setDraggableId(null);
-          socket.emit("moveDraggable", {
-            draggableId: null
-          });
-          prevPosition[draggableId].x = null;
-          prevPosition[draggableId].y = null;
-        }
-        if (resizibleId) {
-          const elementPosition = document
-            .getElementById("resize-" + resizibleId)
-            .getBoundingClientRect();
-
-          editorPosition[resizibleId] = {
-            ...editorPosition[resizibleId],
-            width: elementPosition.width,
-            height: elementPosition.height
-          };
-          socket.emit("moveDraggable", {
-            resizibleId,
-            newPosition: { ...editorPosition }
-          });
-
-          setResizibleId(null);
-        }
-      }}
-    >
-      <StyledTop id="top">
-        <div>
-          <StyledRoomTitle>{roomName}</StyledRoomTitle>
-          <ConnectedUsers connections={connections} />
-        </div>
-        <StyledAddTextBlockBtn
-          onClick={() => {
-            const updatedRoomItems = [...roomItems];
-            const id = "item-" + Math.random().toString(36);
-            const initialRawContent = {
-              rawContent: convertToRaw(
-                EditorState.createEmpty().getCurrentContent()
-              )
-            };
-            updatedRoomItems.push({ id, initialRawContent });
-            setRoomItems(updatedRoomItems);
-            socket.emit("emitNewRoomItem", {
-              id,
-              initialRawContent
-            });
-          }}
-        >
-          Add text block
-        </StyledAddTextBlockBtn>
-      </StyledTop>
+    <StyledRoom onMouseMove={onMouseMove} onMouseUp={onMouseUp}>
+      <Header {...headerProps} />
       <StyledRoomItems>
-        {roomItems.map(item => {
-          const changes =
-            item.id === latestTextEditorChanges.roomItemId
-              ? latestTextEditorChanges
-              : {};
-
-          const position = editorPosition[item.id]
-            ? editorPosition[item.id]
-            : item.editorPosition;
-
-          return (
-            <RoomItem
-              key={item.id}
-              id={item.id}
-              ref={roomRef}
-              resizibleId={resizibleId}
-              setResizibleId={setResizibleId}
-              draggableId={draggableId}
-              setDraggableId={setDraggableId}
-              textEditorProps={textEditorProps}
-              emitTextEditorChanges={emitTextEditorChanges}
-              latestTextEditorChanges={changes}
-              initialRawContent={item.initialRawContent}
-              editorPosition={position}
-              connections={connections}
-              socketId={socket ? socket.id : null}
-              setSize={(id, width, height) => {
-                setEditorPosition({
-                  ...editorPosition,
-                  id: { ...editorPosition[id], width, height }
-                });
-              }}
-            />
-          );
-        })}
+        {roomItems
+          .map(item =>
+            mapRoomItemProps(
+              item,
+              editorPosition,
+              latestTextEditorChanges,
+              roomItemCommonProps
+            )
+          )
+          .map(itemProps => (
+            <RoomItem key={itemProps.id} ref={roomRef} {...itemProps} />
+          ))}
       </StyledRoomItems>
       {hasSyncErrors && (
         <StyledRoomErrors>
